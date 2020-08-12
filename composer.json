@@ -1,0 +1,69 @@
+{
+  "name": "re2bit/types",
+  "description": "Base Types with Jms Mappings and Doctrine Type Classes",
+  "authors": [
+    {
+      "name": "René Gerritsen",
+      "email": "rene.gerritsen@me.com"
+    }
+  ],
+  "license": "MIT",
+  "require": {
+    "php": "^7.4",
+    "doctrine/collections": "^1.6",
+    "ext-json": "*",
+    "psr/log": "^1.1",
+    "ext-iconv": "*",
+    "jfcherng/php-diff": "^6.7",
+    "moneyphp/money": "^3.3",
+    "ext-intl": "*",
+    "symfony/intl": "^5.1"
+  },
+  "suggest": {
+    "monolog/monolog": "Allows more advanced logging of the application flow",
+    "jms/serializer": "Allows u to use JmsResourceReceiver",
+    "doctrine/doctrine-orm": "Let u handle the Types by ORM",
+    "symfony/validator": "Validation for Types",
+    "egulias/email-validator": "Enables RFC conform E-Mail Validation"
+  },
+  "require-dev": {
+    "ext-pdo_sqlite": "*",
+    "phpunit/phpunit": "^7.5||^8.0",
+    "jms/serializer": "^2.2||^3.0",
+    "monolog/monolog": "^2.0",
+    "doctrine/doctrine-module": "^2.1",
+    "doctrine/doctrine-orm-module": "^2.1",
+    "symfony/validator": "^4.3",
+    "egulias/email-validator": "^2.1",
+    "roave/security-advisories": "dev-master",
+    "phpstan/phpstan": "^0.12.25",
+    "friendsofphp/php-cs-fixer": "^2.16",
+    "captainhook/captainhook": "^5.3",
+    "phpstan/phpstan-doctrine": "^0.12.13",
+    "otobank/phpstan-doctrine-criteria": "^0.2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Re2bit\\Types\\": "./src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Re2bit\\Types\\Tests\\": "./tests"
+    }
+  },
+  "scripts": {
+    "test": [
+      "vendor/bin/phpunit"
+    ],
+    "cs": [
+      "vendor/bin/php-cs-fixer --config=.php_cs.dist fix --verbose --dry-run"
+    ],
+    "stan": [
+      "vendor/bin/phpstan analyse --level 8 -c phpstan.neon ."
+    ],
+    "fixcs": [
+      "vendor/bin/php-cs-fixer --config=.php_cs.dist fix --verbose"
+    ]
+  }
+}
