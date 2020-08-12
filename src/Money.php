@@ -200,7 +200,7 @@ class Money
 
         $precisionMoneyThis = $this->precisionTo($precision, $roundingMode);
         $precisionMoneyOther = $other->precisionTo($precision, $roundingMode) ;
-        $precisionMoneyThis->ensureSameCurrency($precisionMoneyOther);
+        $precisionMoneyThis->ensureSameRawCurrency($precisionMoneyOther);
 
         $difference = $precisionMoneyThis->subtract($precisionMoneyOther);
         return $difference->absolute()->toInt() <= $epsilon;
@@ -232,7 +232,7 @@ class Money
         return !$this->almostEqualTo($other, $epsilon, $precision, $roundingMode);
     }
 
-    private function ensureSameCurrency(Money $other): void
+    private function ensureSameRawCurrency(Money $other): void
     {
         if (!$this->isSameCurrency($other)) {
             throw new DomainException(
@@ -249,6 +249,7 @@ class Money
     public function compare(Money $other): int
     {
         $this->ensureInitialized();
+        $this->ensureSamePrecision($other);
         return $this->money->compare($other->unwrap());
     }
 
@@ -258,12 +259,14 @@ class Money
     public function greaterThan(Money $other): bool
     {
         $this->ensureInitialized();
+        $this->ensureSamePrecision($other);
         return $this->money->greaterThan($other->unwrap());
     }
 
     public function greaterThanOrEqual(Money $other): bool
     {
         $this->ensureInitialized();
+        $this->ensureSamePrecision($other);
         return $this->money->greaterThanOrEqual($other->unwrap());
     }
 
@@ -273,12 +276,14 @@ class Money
     public function lessThan(Money $other): bool
     {
         $this->ensureInitialized();
+        $this->ensureSamePrecision($other);
         return $this->money->lessThan($other->unwrap());
     }
 
     public function lessThanOrEqual(Money $other): bool
     {
         $this->ensureInitialized();
+        $this->ensureSamePrecision($other);
         return $this->money->lessThanOrEqual($other->unwrap());
     }
 
@@ -329,10 +334,9 @@ class Money
     public function add(Money ...$addends): Money
     {
         $this->ensureInitialized();
-        return self::fromPhpMoney(
-            $this->money->add(...self::unwrapMoneyArray(...$addends)),
-            $this
-        );
+        $this->ensureSamePrecision(...$addends);
+        $unwrappedAddends = self::unwrapMoneyArray(...$addends);
+        return self::fromPhpMoney($this->money->add(...$unwrappedAddends), $this);
     }
 
     /**
@@ -346,8 +350,10 @@ class Money
     public function subtract(Money ...$subtrahends): Money
     {
         $this->ensureInitialized();
+        $this->ensureSamePrecision(...$subtrahends);
+        $unwrappedSubtrahends = self::unwrapMoneyArray(...$subtrahends);
         return self::fromPhpMoney(
-            $this->money->subtract(...self::unwrapMoneyArray(...$subtrahends)),
+            $this->money->subtract(...$unwrappedSubtrahends),
             $this
         );
     }
@@ -400,6 +406,7 @@ class Money
     public function mod(Money $divisor): Money
     {
         $this->ensureInitialized();
+        $this->ensureSamePrecision($divisor);
         return self::fromPhpMoney(
             $this->money->mod($divisor->unwrap()),
             $this
@@ -487,6 +494,7 @@ class Money
     {
         $firstPhpMoney = $first->unwrap();
         $phpMoneyCollection = self::unwrapMoneyArray(...$collection);
+        $first->ensureSamePrecision(...$collection);
         return self::fromPhpMoney(
             PhpMoney::min($firstPhpMoney, ...$phpMoneyCollection),
             $first
@@ -504,6 +512,7 @@ class Money
     public static function max(self $first, self ...$collection): Money
     {
         $firstPhpMoney = $first->unwrap();
+        $first->ensureSamePrecision(...$collection);
         $phpMoneyCollection = self::unwrapMoneyArray(...$collection);
         return self::fromPhpMoney(
             PhpMoney::max($firstPhpMoney, ...$phpMoneyCollection),
@@ -522,6 +531,7 @@ class Money
     public static function sum(self $first, self ...$collection): Money
     {
         $firstPhpMoney = $first->unwrap();
+        $first->ensureSamePrecision(...$collection);
         $phpMoneyCollection = self::unwrapMoneyArray(...$collection);
         return self::fromPhpMoney(
             PhpMoney::sum($firstPhpMoney, ...$phpMoneyCollection),
@@ -540,6 +550,7 @@ class Money
     public static function avg(Money $first, Money ...$collection): Money
     {
         $firstPhpMoney = $first->unwrap();
+        $first->ensureSamePrecision(...$collection);
         $phpMoneyCollection = self::unwrapMoneyArray(...$collection);
         return self::fromPhpMoney(
             PhpMoney::sum($firstPhpMoney, ...$phpMoneyCollection),
@@ -593,19 +604,21 @@ class Money
     /**
      * @throws PrecisionException
      */
-    private function ensureSamePrecision(Money $other): void
+    private function ensureSamePrecision(Money ...$others): void
     {
         $ownCurrency = $this->getCurrency();
-        $otherCurrency = $other->getCurrency();
-        $differentPrecision = $ownCurrency->getCodeWithoutPrecision()
-            === $otherCurrency->getCodeWithoutPrecision()
-            && $ownCurrency->getCode()
-            !== $otherCurrency->getCode();
-        if ($differentPrecision) {
-            throw PrecisionException::createPrecisionException(
-                $ownCurrency->getPrecision(),
-                $otherCurrency->getPrecision()
-            );
+        foreach ($others as $other) {
+            $otherCurrency = $other->getCurrency();
+            $differentPrecision = $ownCurrency->getCodeWithoutPrecision()
+                === $otherCurrency->getCodeWithoutPrecision()
+                && $ownCurrency->getCode()
+                !== $otherCurrency->getCode();
+            if ($differentPrecision) {
+                throw PrecisionException::createPrecisionException(
+                    $ownCurrency->getPrecision(),
+                    $otherCurrency->getPrecision()
+                );
+            }
         }
     }
 }
