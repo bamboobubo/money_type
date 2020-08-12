@@ -54,12 +54,8 @@
   },
   "scripts": {
     "test": [
-      "vendor/bin/phpunit"
-    ],
-    "cs": [
-      "vendor/bin/php-cs-fixer --config=.php_cs.dist fix --verbose --dry-run"
-    ],
-    "stan": [
+      "vendor/bin/phpunit",
+      "vendor/bin/php-cs-fixer --config=.php_cs.dist fix --verbose --dry-run",
       "vendor/bin/phpstan analyse --level 8 -c phpstan.neon ."
     ],
     "fixcs": [

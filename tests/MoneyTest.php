@@ -373,7 +373,7 @@ class MoneyTest extends DoctrineTest
             $basketReloaded
                 ->getMoneyEur()
                 ->equals(
-                    Money::fromFormattedString('16,12 EUR', $currencyFormatter)
+                    Money::fromDecimalString('16.12', new Currency('EUR'))
                 )
         );
 
