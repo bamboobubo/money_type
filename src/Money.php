@@ -132,9 +132,9 @@ class Money
     private static function fromPhpMoney(PhpMoney $phpMoney, Money $money)
     {
         $instance = new self();
-        $money->money = $phpMoney;
-        $money->amount = $money->money->getAmount();
-        $money->currency = clone $money->currency;
+        $instance->money = $phpMoney;
+        $instance->amount = $phpMoney->getAmount();
+        $instance->currency = clone $money->currency;
         return $instance;
     }
 
@@ -173,6 +173,7 @@ class Money
     public function equals(Money $other): bool
     {
         $this->ensureInitialized();
+        $this->ensureSamePrecision($other);
         return $this->money->equals($other->unwrap());
     }
 
@@ -201,7 +202,8 @@ class Money
         $precisionMoneyOther = $other->precisionTo($precision, $roundingMode) ;
         $precisionMoneyThis->ensureSameCurrency($precisionMoneyOther);
 
-        return abs($precisionMoneyThis->compare($precisionMoneyOther)) <= $epsilon;
+        $difference = $precisionMoneyThis->subtract($precisionMoneyOther);
+        return $difference->absolute()->toInt() <= $epsilon;
     }
 
     public function precisionTo(int $precision, int $roundingMode = self::ROUND_HALF_UP): Money
@@ -586,5 +588,24 @@ class Money
     public function __toString(): string
     {
         return $this->amount . ' ' . $this->currency->getCode();
+    }
+
+    /**
+     * @throws PrecisionException
+     */
+    private function ensureSamePrecision(Money $other): void
+    {
+        $ownCurrency = $this->getCurrency();
+        $otherCurrency = $other->getCurrency();
+        $differentPrecision = $ownCurrency->getCodeWithoutPrecision()
+            === $otherCurrency->getCodeWithoutPrecision()
+            && $ownCurrency->getCode()
+            !== $otherCurrency->getCode();
+        if ($differentPrecision) {
+            throw PrecisionException::createPrecisionException(
+                $ownCurrency->getPrecision(),
+                $otherCurrency->getPrecision()
+            );
+        }
     }
 }

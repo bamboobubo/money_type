@@ -2,3 +2,5 @@ TODO
 ====
 * Test decorated Methods
 * Validator and Doctrine Config to XML Config.
+* Exception for Precision greater than 14 with init from Float
+* \Re2bit\Types\Money::__construct public
