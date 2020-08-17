@@ -1,132 +1,239 @@
 <?php
-declare(strict_types=1);
 
 namespace Re2bit\Types\Tests;
 
-use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Persistence\ManagerRegistry;
-use Doctrine\Common\Persistence\Mapping\ClassMetadata;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DriverManager;
-use Doctrine\ORM\Configuration;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
-use Doctrine\ORM\Tools\SchemaTool;
-use DomainException;
-use JMS\Serializer\ArrayTransformerInterface;
-use JMS\Serializer\SerializerBuilder;
-use PHPUnit\Framework\TestCase;
-use ReflectionClass;
-use RuntimeException;
-use Symfony\Component\Validator\Mapping\Loader\AnnotationLoader;
-use Symfony\Component\Validator\Validator\RecursiveValidator;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Validator\ValidatorBuilder;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\EntityRepository;
+use Fixtures\Doctrine\Entity\DoctrineTest\Basket;
+use Re2bit\Types\Currency;
+use Re2bit\Types\DBAL\Money\AmountType;
+use Re2bit\Types\DBAL\Money\CurrencyType;
+use Re2bit\Types\DBAL\Money\MoneyEur16Type;
+use Re2bit\Types\DBAL\Money\MoneyEur5Type;
+use Re2bit\Types\DBAL\Money\MoneyEur8Type;
+use Re2bit\Types\DBAL\Money\MoneyEurType;
+use Re2bit\Types\Money;
 
-abstract class DoctrineTest extends TestCase
+class DoctrineTest extends AbstractDoctrineTest
 {
-    /** @var ClassMetadata[]  */
-    protected array $metadata;
-    protected ManagerRegistry $registry;
-    protected Connection $connection;
-    protected EntityManagerInterface $entityManager;
-    protected static bool $typeRegistered = false;
-
-    abstract protected function registerType(): void;
-
-    private function registerTypesOnce(): void
+    public function testBasicPersistAndLoad(): void
     {
-        if (!static::$typeRegistered) {
-            $this->registerType();
-            static::$typeRegistered = true;
-        }
-    }
-
-    protected function setUp(): void
-    {
-        $this->connection = $this->createConnection();
-        $this->registerTypesOnce();
-        $this->entityManager = $this->createEntityManager($this->connection);
-        $this->metadata = $this->entityManager->getMetadataFactory()->getAllMetadata();
-        $this->registry = new SimpleBaseManagerRegistry(
-            function ($id) {
-                switch ($id) {
-                    case 'default_connection':
-                        return $this->connection;
-
-                    case 'default_manager':
-                        return $this->entityManager;
-
-                    default:
-                        throw new RuntimeException(sprintf('Unknown service id "%s".', $id));
-                }
-            }
+        $basket = new Basket();
+        $basket->setId(1);
+        $basket->setMoney(
+            Money::fromFloat(
+                1.23,
+                new Currency(
+                    'EUR'
+                )
+            )
         );
+        $this->entityManager->persist($basket);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+        /** @var Basket $baskedLoaded */
+        $baskedLoaded = $this->entityManager->find(Basket::class, 1);
 
-        $this->prepareDatabase();
+        static::assertInstanceOf(Basket::class, $baskedLoaded);
+        static::assertEquals(123, $baskedLoaded->getMoney()->getAmount());
     }
 
-    private function prepareDatabase(): void
+    public function testMatchingOnRepository(): void
     {
-        /** @var EntityManager $em */
-        $em = $this->registry->getManager();
+        $basket = new Basket();
+        $basket->setid(1);
+        $basket->setMoney(
+            Money::fromFloat(
+                1.23,
+                new Currency(
+                    'EUR'
+                )
+            )
+        );
+        $this->entityManager->persist($basket);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
 
-        $tool = new SchemaTool($em);
-        $tool->createSchema($em->getMetadataFactory()->getAllMetadata());
-    }
-
-    private function createConnection(): Connection
-    {
-        return DriverManager::getConnection([
-            'driver' => 'pdo_sqlite',
-            'memory' => true,
-        ]);
-    }
-
-    private function createEntityManager(Connection $con, ?Configuration $cfg = null): EntityManagerInterface
-    {
-        $metaDataFolder = __DIR__ . '/Fixtures/Doctrine/Entity/' . (new ReflectionClass($this))->getShortName();
-        if (!file_exists($metaDataFolder)) {
-            static::markTestSkipped('Invalid Test Configuration. Doctrine Entities missing');
-        }
-
-        if (!$cfg) {
-            $cfg = new Configuration();
-            $cfg->setMetadataDriverImpl(new AnnotationDriver(new AnnotationReader(), [
-                $metaDataFolder,
-            ]));
-        }
-
-        $cfg->setAutoGenerateProxyClasses(true);
-        $cfg->setProxyNamespace('JMS\Serializer\DoctrineProxy');
-        $cfg->setProxyDir(sys_get_temp_dir() . '/money-type-proxies');
-
-        return EntityManager::create($con, $cfg);
-    }
-
-    /**
-     * @return RecursiveValidator|ValidatorInterface
-     */
-    protected function createValidator()
-    {
-        $builder = new ValidatorBuilder();
-        $builder->addLoader(
-            new AnnotationLoader(
-                new AnnotationReader()
+        /** @var EntityRepository $repo */
+        $repo = $this->entityManager->getRepository(Basket::class);
+        static::assertCount(
+            1,
+            $repo->matching(
+                Criteria::create()->where(
+                    Criteria::expr()->eq(
+                        'money.currency',
+                        'EUR'
+                    )
+                )->andWhere(
+                    Criteria::expr()->eq(
+                        'money.amount',
+                        '123'
+                    )
+                )
             )
         );
 
-        return $builder->getValidator();
+        static::assertCount(
+            1,
+            $repo->matching(
+                Criteria::create()->where(
+                    Criteria::expr()->eq(
+                        'money.currency',
+                        new Currency('EUR')
+                    )
+                )->andWhere(
+                    Criteria::expr()->eq(
+                        'money.amount',
+                        '123'
+                    )
+                )
+            )
+        );
     }
 
-    protected function createArrayTransformer(): ArrayTransformerInterface
+    /**
+     * Match in Memory is not possible and not recomended since the Criteria Api only supports
+     * scalar Values
+     *
+     * @return void
+     */
+    public function testMatchingInMemory(): void
     {
-        $serializerBuilder = SerializerBuilder::create();
-        $arrayTransformer = $serializerBuilder->build();
-        if (!$arrayTransformer instanceof ArrayTransformerInterface) {
-            throw new DomainException('No Array Transformer available');
-        }
-        return $arrayTransformer;
+        $basket = new Basket();
+        $basket->setid(1);
+        $basket->setMoney(
+            Money::fromFloat(
+                1.23,
+                new Currency(
+                    'EUR'
+                )
+            )
+        );
+
+        $collection = new ArrayCollection([$basket]);
+
+        // Cannot Compare Objects. Doctrine is limited to Scalar Values. Changes maybe with 3.0 ?
+        static::assertCount(
+            0,
+            $collection->matching(
+                Criteria::create()->where(
+                    Criteria::expr()->eq(
+                        'money',
+                        Money::fromFloat(
+                            1.23,
+                            new Currency('EUR')
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    public function testMoneyWithKnownCurrencyColumn(): void
+    {
+        $basket = new Basket();
+        $basket->setid(1);
+        $basket->setMoney(
+            Money::fromFloat(
+                0.00,
+                new Currency(
+                    'EUR'
+                )
+            )
+        );
+        $basket->setMoneyEur(
+            Money::fromFloat(
+                16.12345678,
+                new Currency(
+                    'EUR',
+                    2
+                )
+            )
+        );
+
+        $basket->setMoneyEur5(
+            Money::fromFloat(
+                16.1234567890123456,
+                new Currency(
+                    'EUR',
+                    5
+                )
+            )
+        );
+
+        $basket->setMoneyEur8(
+            Money::fromFloat(
+                16.1234567890123456,
+                new Currency(
+                    'EUR',
+                    8
+                )
+            )
+        );
+        $basket->setMoneyEur16(
+            Money::fromInt(
+                -161234567890123456,
+                new Currency(
+                    'EUR',
+                    16
+                )
+            )
+        );
+        $this->entityManager->persist($basket);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        /** @var Basket $basketReloaded */
+        $basketReloaded = $this->entityManager->getRepository(Basket::class)->find(1);
+
+        static::assertTrue(
+            $basketReloaded
+                ->getMoneyEur()
+                ->equals(
+                    Money::fromDecimalString('16.12', new Currency('EUR'))
+                )
+        );
+
+        static::assertTrue(
+            $basketReloaded
+                ->getMoneyEur5()
+                ->equals(
+                    Money::fromFloat(
+                        16.12346, // .123456 becomes .12346 :) since its rounded to 5 precision,
+                        new Currency(
+                            'EUR',
+                            5
+                        )
+                    )
+                )
+        );
+
+        static::assertTrue(
+            $basketReloaded
+                ->getMoneyEur8()
+                ->equals(
+                    Money::fromFloat(
+                        16.12345679, // .12345678 becomes .12345679 :) since its rounded to 8 precision,
+                        new Currency(
+                            'EUR',
+                            8
+                        )
+                    )
+                )
+        );
+
+        static::assertTrue(
+            $basketReloaded
+                ->getMoneyEur16()
+                ->equals(Money::fromInt(
+                    -161234567890123, //SQLite Limit
+                    new Currency(
+                        'EUR',
+                        16
+                    )
+                ))
+        );
     }
 }

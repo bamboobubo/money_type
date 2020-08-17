@@ -1,6 +1,6 @@
 <?php
 
-namespace Fixtures\Doctrine\Entity\MoneyTest;
+namespace Fixtures\Doctrine\Entity\DoctrineTest;
 
 use Doctrine\ORM\Mapping as ORM;
 use Re2bit\Types\Money;
