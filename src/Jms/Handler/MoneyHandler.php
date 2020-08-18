@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Re2bit\Types\Jms\Handler;
 
 use DomainException;
-use DOMCdataSection;
-use DOMText;
 use JMS\Serializer\GraphNavigatorInterface;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Visitor\DeserializationVisitorInterface;
 use JMS\Serializer\Visitor\SerializationVisitorInterface;
+use NumberFormatter;
 use Re2bit\Types\Currency;
 use Re2bit\Types\Money;
 
@@ -38,7 +37,7 @@ final class MoneyHandler implements SubscribingHandlerInterface
         $methods = [];
         $type = Money::class;
 
-        foreach (['json', 'xml'] as $format) {
+        foreach (['json'] as $format) {
             $methods[] = [
                 'type'      => $type,
                 'direction' => GraphNavigatorInterface::DIRECTION_DESERIALIZATION,
@@ -59,7 +58,7 @@ final class MoneyHandler implements SubscribingHandlerInterface
     /**
      * @param mixed[] $type
      *
-     * @return DOMCdataSection|DOMText|mixed
+     * @return mixed
      */
     public function serialize(SerializationVisitorInterface $visitor, Money $money, array $type, SerializationContext $context)
     {
@@ -89,6 +88,8 @@ final class MoneyHandler implements SubscribingHandlerInterface
         switch ($mode) {
             case self::MODE_DECIMAL:
                 return $this->parseDecimal($data, $type);
+            case self::MODE_STRING:
+                return $this->parseString($data, $type);
         }
         throw new DomainException('Mode is not Valid', 1597732468436);
     }
@@ -109,6 +110,29 @@ final class MoneyHandler implements SubscribingHandlerInterface
                 $currency,
                 $precision
             )
+        );
+    }
+
+    /**
+     * @param mixed   $data
+     * @param mixed[] $type
+     *
+     * @return Money
+     */
+    private function parseString($data, array $type): Money
+    {
+        $local = $this->getLocal($type);
+        if (null === $local) {
+            throw new DomainException(
+                'Local is required for String mode.'
+                . ' Write @Serializer\Type("Re2bit\Types\Money<\'string\', \'DE_de\'>")',
+                1597734424902
+            );
+        }
+        $numberFormatter = new NumberFormatter($local, NumberFormatter::CURRENCY);
+        return Money::fromFormattedString(
+            (string)$data,
+            $numberFormatter
         );
     }
 
@@ -156,5 +180,19 @@ final class MoneyHandler implements SubscribingHandlerInterface
         }
 
         return (int)$type['params'][2];
+    }
+
+    /**
+     * @param mixed[] $type
+     *
+     * @return string|null
+     */
+    private function getLocal(array $type): ?string
+    {
+        if (!isset($type['params'][1])) {
+            return null;
+        }
+
+        return (string)$type['params'][1];
     }
 }

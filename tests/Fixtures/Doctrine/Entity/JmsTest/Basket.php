@@ -23,4 +23,22 @@ class Basket
      * @ORM\Embedded(class="Re2bit\Types\Money")
      */
     public ?Money $moneyString;
+
+    /**
+     * @Serializer\Type("Re2bit\Types\Money<'string', 'DE_de'>")
+     * @ORM\Embedded(class="Re2bit\Types\Money")
+     */
+    public ?Money $moneyFormattedString;
+
+    /**
+     * @Serializer\Type("Re2bit\Types\Money<'integer', 'EUR'>")
+     * @ORM\Embedded(class="Re2bit\Types\Money")
+     */
+    public ?Money $moneyInteger;
+
+    /**
+     * @Serializer\Type("Re2bit\Types\Money<'float', 'EUR'>")
+     * @ORM\Embedded(class="Re2bit\Types\Money")
+     */
+    public ?Money $moneyFloat;
 }

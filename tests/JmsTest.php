@@ -83,6 +83,48 @@ class JmsTest extends AbstractDoctrineTest
         }
     }
 
+    /**
+     * @return array<string,array<string>>
+     */
+    public function deserializeFormattedStringDataProvider(): array
+    {
+        return [
+            'formattedStringEUR' => [
+                "{\"money_formatted_string\": \"1,23\xc2\xa0€\"}",
+                'EUR',
+            ],
+            'formattedStringUSD' => [
+                "{\"money_formatted_string\": \"1,23\xc2\xa0$\"}",
+                'USD',
+            ],
+            'formattedStringEURWhitespace' => [
+                '{"money_formatted_string": "1,23 €"}',
+                'EUR',
+            ],
+            'formattedStringUSDWhitespace' => [
+                '{"money_formatted_string": "1,23 $"}',
+                'USD',
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider deserializeFormattedStringDataProvider
+     */
+    public function testDeserializeOfFormattedString(string $json, string $expectedCurrencyCode): void
+    {
+        $serializer = $this->createSerializer();
+        /** @var Basket $model */
+        $model = $serializer->deserialize($json, Basket::class, 'json');
+        $moneyFormattedString = $model->moneyFormattedString;
+        static::assertInstanceOf(Money::class, $moneyFormattedString);
+        if ($moneyFormattedString instanceof Money) {
+            static::assertSame(1.23, $moneyFormattedString->toFloat());
+            static::assertEquals($expectedCurrencyCode, $moneyFormattedString->getCurrency()->getCodeWithoutPrecision());
+            static::assertEquals(2, $moneyFormattedString->getCurrency()->getPrecision());
+        }
+    }
+
     private function createSerializer(): SerializerInterface
     {
         return SerializerBuilder::create()
