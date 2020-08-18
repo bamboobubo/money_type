@@ -55,11 +55,14 @@ class JmsTest extends AbstractDoctrineTest
         static::assertNotEmpty($errors);
     }
 
+    /**
+     * @return array<string,array<string>>
+     */
     public function deserializeOfDecimalCurrencyDataProvider(): array
     {
         return [
             'decimalEncodedAsString' => ['{"money_string": "12.443312"}'],
-            'decimalEncodedAsFloat' => ['{"money_string": 12.443312}']
+            'decimalEncodedAsFloat'  => ['{"money_string": 12.443312}'],
         ];
     }
 
@@ -71,18 +74,21 @@ class JmsTest extends AbstractDoctrineTest
         $serializer = $this->createSerializer();
         /** @var Basket $model */
         $model = $serializer->deserialize($json, Basket::class, 'json');
-        static::assertSame(12.443312, $model->moneyString->toFloat());
-        static::assertEquals('EUR', $model->moneyString->getCurrency()->getCodeWithoutPrecision());
-        static::assertEquals(6, $model->moneyString->getCurrency()->getPrecision());
+        $moneyString = $model->moneyString;
+        static::assertInstanceOf(Money::class, $moneyString);
+        if ($moneyString instanceof Money) {
+            static::assertSame(12.443312, $moneyString->toFloat());
+            static::assertEquals('EUR', $moneyString->getCurrency()->getCodeWithoutPrecision());
+            static::assertEquals(6, $moneyString->getCurrency()->getPrecision());
+        }
     }
 
     private function createSerializer(): SerializerInterface
     {
-       return SerializerBuilder::create()
+        return SerializerBuilder::create()
            ->addDefaultHandlers()
            ->configureHandlers(
-               function(HandlerRegistryInterface $handlerRegistry)
-               {
+               function (HandlerRegistryInterface $handlerRegistry) {
                    $handlerRegistry->registerSubscribingHandler(
                        new MoneyHandler()
                    );

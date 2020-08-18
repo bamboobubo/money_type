@@ -4,16 +4,9 @@ namespace Re2bit\Types\Tests;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityRepository;
 use Fixtures\Doctrine\Entity\DoctrineTest\Basket;
 use Re2bit\Types\Currency;
-use Re2bit\Types\DBAL\Money\AmountType;
-use Re2bit\Types\DBAL\Money\CurrencyType;
-use Re2bit\Types\DBAL\Money\MoneyEur16Type;
-use Re2bit\Types\DBAL\Money\MoneyEur5Type;
-use Re2bit\Types\DBAL\Money\MoneyEur8Type;
-use Re2bit\Types\DBAL\Money\MoneyEurType;
 use Re2bit\Types\Money;
 
 class DoctrineTest extends AbstractDoctrineTest

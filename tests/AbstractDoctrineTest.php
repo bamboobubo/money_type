@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Re2bit\Types\Tests;
 
 use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\Common\Persistence\Mapping\ClassMetadata;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -13,7 +14,6 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 use Doctrine\ORM\Tools\SchemaTool;
-use Doctrine\Persistence\ConnectionRegistry;
 use DomainException;
 use JMS\Serializer\ArrayTransformerInterface;
 use JMS\Serializer\SerializerBuilder;
@@ -35,7 +35,7 @@ abstract class AbstractDoctrineTest extends TestCase
 {
     /** @var ClassMetadata[]  */
     protected array $metadata;
-    protected ConnectionRegistry $registry;
+    protected ManagerRegistry $registry;
     protected Connection $connection;
     protected EntityManagerInterface $entityManager;
     protected static bool $typeRegistered = false;
