@@ -125,6 +125,82 @@ class JmsTest extends AbstractDoctrineTest
         }
     }
 
+    /**
+     * @return array<string,array<string>>
+     */
+    public function deserializeIntegerDataProvider(): array
+    {
+        return [
+            'moneyIntegerAsStringEur' => [
+                '{"money_integer": "123"}',
+            ],
+            'moneyIntegerAsIntegerEur' => [
+                '{"money_integer": 123}',
+            ],
+            'moneyIntegerAsFloat' => [
+                '{"money_integer": 123.0}',
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider deserializeIntegerDataProvider
+     */
+    public function testDeserializeOfInteger(string $json): void
+    {
+        $serializer = $this->createSerializer();
+        /** @var Basket $model */
+        $model = $serializer->deserialize($json, Basket::class, 'json');
+        $moneyInteger = $model->moneyInteger;
+        static::assertInstanceOf(Money::class, $moneyInteger);
+        if ($moneyInteger instanceof Money) {
+            static::assertSame(1.23, $moneyInteger->toFloat());
+            static::assertEquals('EUR', $moneyInteger->getCurrency()->getCodeWithoutPrecision());
+            static::assertEquals(2, $moneyInteger->getCurrency()->getPrecision());
+        }
+    }
+
+    /**
+     * @return array<string,array<mixed>>
+     */
+    public function deserializeFloatDataProvider(): array
+    {
+        return [
+            'moneyFloatAsStringEur' => [
+                '{"money_float": "1.23"}',
+                1.23,
+            ],
+            'moneyFloatAsIntegerEur' => [
+                '{"money_float": 13}',
+                13.0,
+            ],
+            'moneyFloatAsFloat' => [
+                '{"money_float": 1.23}',
+                1.23,
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider deserializeFloatDataProvider
+     *
+     * @param string $json
+     * @param float  $expectedResult
+     */
+    public function testDeserializeOfFloat(string $json, float $expectedResult): void
+    {
+        $serializer = $this->createSerializer();
+        /** @var Basket $model */
+        $model = $serializer->deserialize($json, Basket::class, 'json');
+        $moneyFloat = $model->moneyFloat;
+        static::assertInstanceOf(Money::class, $moneyFloat);
+        if ($moneyFloat instanceof Money) {
+            static::assertSame($expectedResult, $moneyFloat->toFloat());
+            static::assertEquals('EUR', $moneyFloat->getCurrency()->getCodeWithoutPrecision());
+            static::assertEquals(2, $moneyFloat->getCurrency()->getPrecision());
+        }
+    }
+
     private function createSerializer(): SerializerInterface
     {
         return SerializerBuilder::create()

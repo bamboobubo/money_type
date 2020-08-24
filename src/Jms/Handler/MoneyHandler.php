@@ -90,6 +90,10 @@ final class MoneyHandler implements SubscribingHandlerInterface
                 return $this->parseDecimal($data, $type);
             case self::MODE_STRING:
                 return $this->parseString($data, $type);
+            case self::MODE_INTEGER:
+                return $this->parseInteger($data, $type);
+            case self::MODE_FLOAT:
+                return $this->parseFloat($data, $type);
         }
         throw new DomainException('Mode is not Valid', 1597732468436);
     }
@@ -133,6 +137,44 @@ final class MoneyHandler implements SubscribingHandlerInterface
         return Money::fromFormattedString(
             (string)$data,
             $numberFormatter
+        );
+    }
+
+    /**
+     * @param mixed   $data
+     * @param mixed[] $type
+     *
+     * @return Money
+     */
+    private function parseInteger($data, array $type): Money
+    {
+        $currency = $this->getCurrency($type);
+        $precision = $this->getPrecision($type);
+        return Money::fromInt(
+            (int)$data,
+            new Currency(
+                $currency,
+                $precision
+            )
+        );
+    }
+
+    /**
+     * @param mixed   $data
+     * @param mixed[] $type
+     *
+     * @return Money
+     */
+    private function parseFloat($data, array $type): Money
+    {
+        $currency = $this->getCurrency($type);
+        $precision = $this->getPrecision($type);
+        return Money::fromFloat(
+            (float)$data,
+            new Currency(
+                $currency,
+                $precision
+            )
         );
     }
 
