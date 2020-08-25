@@ -62,6 +62,107 @@ final class MoneyHandler implements SubscribingHandlerInterface
      */
     public function serialize(SerializationVisitorInterface $visitor, Money $money, array $type, SerializationContext $context)
     {
+        $mode = $this->getMode($type);
+        switch ($mode) {
+            case self::MODE_DECIMAL:
+                return $this->serializeDecimal($money, $type);
+            case self::MODE_STRING:
+                return $this->serializeString($money, $type);
+            case self::MODE_INTEGER:
+                return $this->serializeInteger($money, $type);
+            case self::MODE_FLOAT:
+                return $this->serializeFloat($money, $type);
+        }
+        throw new DomainException('Mode is not Valid', 1598281688658);
+    }
+
+    /**
+     * @param Money $money
+     * @param mixed[] $type
+     *
+     * @return void
+     */
+    private function assertCurrencyAndPrecisionMatch(Money $money, array $type): void
+    {
+        $moneyAmount = $money->getAmount();
+        $moneyCurrency = $money->getCurrency()->getCodeWithoutPrecision();
+        $moneyPrecision = $money->getCurrency()->getPrecision();
+        $typePrecision = $this->getPrecision($type);
+        $typeCurrency = $this->getCurrency($type);
+        if ($moneyPrecision !== $typePrecision) {
+            throw new InvalidPrecisionException(
+                "Money Precision '{$moneyPrecision}' does not match Type Precision '{$typePrecision}' for '{$moneyAmount}'"
+            );
+        }
+
+        if ($moneyCurrency !== $typeCurrency) {
+            throw new InvalidCurrencyException(
+                "Money Currency '{$moneyCurrency}' does not match Type Currency '{$typeCurrency}' for '{$moneyAmount}'"
+            );
+        }
+    }
+
+    private function assertHasIso4217Precision(Money $money): void
+    {
+        if (!$money->getCurrency()->hasPrecisionOtherThanIso4217()) {
+            throw new InvalidPrecisionException(
+                "Money has non ISO4217 Precision"
+            );
+        }
+    }
+
+    /**
+     * @param Money $money
+     * @param mixed[] $type
+     *
+     * @return string
+     */
+    private function serializeDecimal(Money $money, array $type): string
+    {
+        $this->assertCurrencyAndPrecisionMatch($money, $type);
+        $precision = $this->getPrecision($type);
+        return $money->toDecimalString($precision);
+    }
+
+    /**
+     * @param Money $money
+     * @param mixed[] $type
+     *
+     * @return string
+     */
+    private function serializeString(Money $money, array $type): string
+    {
+        $this->assertHasIso4217Precision($money);
+        $currencyFormatter = $this->getNumberFormatter($type);
+        return $money->toString($currencyFormatter);
+    }
+
+    /**
+     * @param Money $money
+     * @param mixed[] $type
+     *
+     * @return int
+     */
+    private function serializeInteger(Money $money, array $type): int
+    {
+        $this->assertCurrencyAndPrecisionMatch($money, $type);
+        return $money->toInt();
+    }
+
+    /**
+     * @param Money $money
+     * @param mixed[] $type
+     *
+     * @return float
+     */
+    private function serializeFloat(Money $money, array $type): float
+    {
+        $this->assertCurrencyAndPrecisionMatch($money, $type);
+        return round(
+            $money->toFloat(),
+            $money->getCurrency()->getPrecision(),
+            Money::ROUND_HALF_UP
+        );
     }
 
     /**
@@ -72,17 +173,6 @@ final class MoneyHandler implements SubscribingHandlerInterface
      * @return Money
      */
     public function deserialize(DeserializationVisitorInterface $visitor, $data, array $type): Money
-    {
-        return $this->parseMoney($data, $type);
-    }
-
-    /**
-     * @param mixed   $data
-     * @param mixed[] $type
-     *
-     * @return Money
-     */
-    private function parseMoney($data, $type): Money
     {
         $mode = $this->getMode($type);
         switch ($mode) {
@@ -125,15 +215,7 @@ final class MoneyHandler implements SubscribingHandlerInterface
      */
     private function parseString($data, array $type): Money
     {
-        $local = $this->getLocal($type);
-        if (null === $local) {
-            throw new DomainException(
-                'Local is required for String mode.'
-                . ' Write @Serializer\Type("Re2bit\Types\Money<\'string\', \'DE_de\'>")',
-                1597734424902
-            );
-        }
-        $numberFormatter = new NumberFormatter($local, NumberFormatter::CURRENCY);
+        $numberFormatter = $this->getNumberFormatter($type);
         return Money::fromFormattedString(
             (string)$data,
             $numberFormatter
@@ -213,12 +295,13 @@ final class MoneyHandler implements SubscribingHandlerInterface
     /**
      * @param mixed[] $type
      *
-     * @return int|null
+     * @return int
      */
-    private function getPrecision(array $type): ?int
+    private function getPrecision(array $type): int
     {
         if (!isset($type['params'][2])) {
-            return null;
+            $currency = new Currency($this->getCurrency($type));
+            return $currency->getPrecision();
         }
 
         return (int)$type['params'][2];
@@ -236,5 +319,23 @@ final class MoneyHandler implements SubscribingHandlerInterface
         }
 
         return (string)$type['params'][1];
+    }
+
+    /**
+     * @param mixed[] $type
+     * @return NumberFormatter
+     */
+    private function getNumberFormatter(array $type): NumberFormatter
+    {
+        $local = $this->getLocal($type);
+        if (null === $local) {
+            throw new DomainException(
+                'Local is required for String mode.'
+                . ' Write @Serializer\Type("Re2bit\Types\Money<\'string\', \'DE_de\'>")',
+                1597734424902
+            );
+        }
+
+        return new NumberFormatter($local, NumberFormatter::CURRENCY);
     }
 }

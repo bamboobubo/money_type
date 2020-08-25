@@ -22,13 +22,13 @@ class Basket
      * @Serializer\Type("Re2bit\Types\Money<'decimal', 'EUR', 6>")
      * @ORM\Embedded(class="Re2bit\Types\Money")
      */
-    public ?Money $moneyString;
+    public ?Money $moneyDecimal;
 
     /**
      * @Serializer\Type("Re2bit\Types\Money<'string', 'DE_de'>")
      * @ORM\Embedded(class="Re2bit\Types\Money")
      */
-    public ?Money $moneyFormattedString;
+    public ?Money $moneyString;
 
     /**
      * @Serializer\Type("Re2bit\Types\Money<'integer', 'EUR'>")

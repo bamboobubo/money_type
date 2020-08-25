@@ -7,6 +7,8 @@ use JMS\Serializer\Handler\HandlerRegistryInterface;
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\SerializerInterface;
 use Re2bit\Types\Currency;
+use Re2bit\Types\Jms\Handler\InvalidCurrencyException;
+use Re2bit\Types\Jms\Handler\InvalidPrecisionException;
 use Re2bit\Types\Jms\Handler\MoneyHandler;
 use Re2bit\Types\Money;
 
@@ -61,8 +63,8 @@ class JmsTest extends AbstractDoctrineTest
     public function deserializeOfDecimalCurrencyDataProvider(): array
     {
         return [
-            'decimalEncodedAsString' => ['{"money_string": "12.443312"}'],
-            'decimalEncodedAsFloat'  => ['{"money_string": 12.443312}'],
+            'decimalEncodedAsString' => ['{"money_decimal": "12.443312"}'],
+            'decimalEncodedAsFloat'  => ['{"money_decimal": 12.443312}'],
         ];
     }
 
@@ -74,7 +76,7 @@ class JmsTest extends AbstractDoctrineTest
         $serializer = $this->createSerializer();
         /** @var Basket $model */
         $model = $serializer->deserialize($json, Basket::class, 'json');
-        $moneyString = $model->moneyString;
+        $moneyString = $model->moneyDecimal;
         static::assertInstanceOf(Money::class, $moneyString);
         if ($moneyString instanceof Money) {
             static::assertSame(12.443312, $moneyString->toFloat());
@@ -90,19 +92,19 @@ class JmsTest extends AbstractDoctrineTest
     {
         return [
             'formattedStringEUR' => [
-                "{\"money_formatted_string\": \"1,23\xc2\xa0€\"}",
+                "{\"money_string\": \"1,23\xc2\xa0€\"}",
                 'EUR',
             ],
             'formattedStringUSD' => [
-                "{\"money_formatted_string\": \"1,23\xc2\xa0$\"}",
+                "{\"money_string\": \"1,23\xc2\xa0$\"}",
                 'USD',
             ],
             'formattedStringEURWhitespace' => [
-                '{"money_formatted_string": "1,23 €"}',
+                '{"money_string": "1,23 €"}',
                 'EUR',
             ],
             'formattedStringUSDWhitespace' => [
-                '{"money_formatted_string": "1,23 $"}',
+                '{"money_string": "1,23 $"}',
                 'USD',
             ],
         ];
@@ -116,7 +118,7 @@ class JmsTest extends AbstractDoctrineTest
         $serializer = $this->createSerializer();
         /** @var Basket $model */
         $model = $serializer->deserialize($json, Basket::class, 'json');
-        $moneyFormattedString = $model->moneyFormattedString;
+        $moneyFormattedString = $model->moneyString;
         static::assertInstanceOf(Money::class, $moneyFormattedString);
         if ($moneyFormattedString instanceof Money) {
             static::assertSame(1.23, $moneyFormattedString->toFloat());
@@ -199,6 +201,89 @@ class JmsTest extends AbstractDoctrineTest
             static::assertEquals('EUR', $moneyFloat->getCurrency()->getCodeWithoutPrecision());
             static::assertEquals(2, $moneyFloat->getCurrency()->getPrecision());
         }
+    }
+
+    public function testSerializeMoneyObject(): void
+    {
+        $serializer = $this->createSerializer();
+        $model = new Basket();
+        $model->moneyFloat = Money::EUR(123);
+        $model->moneyString = Money::EUR(123);
+        $model->moneyDecimal = Money::fromInt(1230000, new Currency('EUR', 6));
+        $model->moneyInteger = Money::EUR(123);
+        $json = $serializer->serialize($model, 'json');
+
+        static::assertJson($json);
+        static::assertJsonStringEqualsJsonFile(
+            __DIR__ . '/Fixtures/Doctrine/Entity/JmsTest/expected_serialize.json',
+            $json
+        );
+    }
+
+    /**
+     * @return array<string,array<mixed>>
+     */
+    public function invalidMoneyExceptionDataProvider(): array
+    {
+        return [
+            'moneyDecimalWrongCurrency' => [
+                'moneyDecimal',
+                Money::fromInt(123, new Currency('USD', 6)),
+                InvalidCurrencyException::class,
+            ],
+            'moneyDecimalWrongPrecision' => [
+                'moneyDecimal',
+                Money::fromInt(123, new Currency('EUR', 2)),
+                InvalidPrecisionException::class,
+            ],
+            'moneyIntWrongCurrency' => [
+                'moneyInteger',
+                Money::fromInt(123, new Currency('USD', 2)),
+                InvalidCurrencyException::class,
+            ],
+            'moneyIntWrongPrecision' => [
+                'moneyInteger',
+                Money::fromInt(123, new Currency('EUR', 6)),
+                InvalidPrecisionException::class,
+            ],
+            'moneyFloatWrongCurrency' => [
+                'moneyFloat',
+                Money::fromInt(123, new Currency('USD', 2)),
+                InvalidCurrencyException::class,
+            ],
+            'moneyFloatWrongPrecision' => [
+                'moneyFloat',
+                Money::fromInt(123, new Currency('EUR', 6)),
+                InvalidPrecisionException::class,
+            ],
+            'moneyStringWrongPrecision' => [
+                'moneyString',
+                Money::fromInt(123, new Currency('EUR', 6)),
+                InvalidPrecisionException::class,
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider invalidMoneyExceptionDataProvider
+     *
+     * @param string $property
+     * @param Money  $money
+     * @param class-string<\Throwable> $expectedException
+     */
+    public function testExceptionOnInvalidCurrencyForProperty(string $property, Money $money, string $expectedException): void
+    {
+        $this->expectException($expectedException);
+        $serializer = $this->createSerializer();
+        $model = new Basket();
+        // Valid once
+        $model->moneyFloat = Money::EUR(123);
+        $model->moneyString = Money::EUR(123);
+        $model->moneyDecimal = Money::fromInt(1230000, new Currency('EUR', 6));
+        $model->moneyInteger = Money::EUR(123);
+        // overwrite test property
+        $model->{$property} = $money;
+        $serializer->serialize($model, 'json');
     }
 
     private function createSerializer(): SerializerInterface

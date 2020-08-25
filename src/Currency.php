@@ -65,6 +65,11 @@ class Currency
         return (string)reset($codeParts);
     }
 
+    public function hasPrecisionOtherThanIso4217(): bool
+    {
+        return isset(ISO4217::PRECISION[$this->getCode()]);
+    }
+
     public function __toString(): string
     {
         return $this->getCode();
