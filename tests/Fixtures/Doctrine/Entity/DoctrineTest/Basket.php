@@ -18,7 +18,7 @@ class Basket
     protected $id;
 
     /**
-     * @ORM\Embedded(class="Re2bit\Types\Money")
+     * @ORM\Embedded(class=Money::class)
      */
     protected Money $money;
 

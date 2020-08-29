@@ -30,46 +30,46 @@ class ComparisonTest extends TestCase
 
     public function testAlmostEqualTo(): void
     {
-        $money1Percision4 = Money::fromInt(
+        $money1Precision4 = Money::fromInt(
             1235023,
             new Currency('EUR', 4)
         );
-        $money2Percision4 = Money::fromInt(
+        $money2Precision4 = Money::fromInt(
             1235049,
             new Currency('EUR', 4)
         );
-        static::assertFalse($money1Percision4->equals($money2Percision4));
-        static::assertTrue($money1Percision4->almostEqualTo($money2Percision4, 0, 2));
-        static::assertFalse($money1Percision4->notAlmostEqualTo($money2Percision4, 0, 2));
+        static::assertFalse($money1Precision4->equals($money2Precision4));
+        static::assertTrue($money1Precision4->almostEqualTo($money2Precision4, 0, 2));
+        static::assertFalse($money1Precision4->notAlmostEqualTo($money2Precision4, 0, 2));
 
-        $money3Percision4 = Money::fromFloat(
+        $money3Precision4 = Money::fromFloat(
             123.50999231,
             new Currency('EUR', 4)
         );
-        $money4Percision4 = Money::fromFloat(
+        $money4Precision4 = Money::fromFloat(
             123.50490000001,
             new Currency('EUR', 4)
         );
-        static::assertFalse($money3Percision4->equals($money4Percision4));
-        static::assertTrue($money3Percision4->almostEqualTo($money4Percision4, 2, 2));
-        static::assertFalse($money3Percision4->notAlmostEqualTo($money4Percision4, 2, 2));
-        static::assertTrue($money3Percision4->almostEqualTo($money4Percision4, 100));
-        static::assertFalse($money3Percision4->notAlmostEqualTo($money4Percision4, 100));
-        static::assertFalse($money3Percision4->almostEqualTo($money4Percision4, 50));
-        static::assertTrue($money3Percision4->notAlmostEqualTo($money4Percision4, 50));
+        static::assertFalse($money3Precision4->equals($money4Precision4));
+        static::assertTrue($money3Precision4->almostEqualTo($money4Precision4, 2, 2));
+        static::assertFalse($money3Precision4->notAlmostEqualTo($money4Precision4, 2, 2));
+        static::assertTrue($money3Precision4->almostEqualTo($money4Precision4, 100));
+        static::assertFalse($money3Precision4->notAlmostEqualTo($money4Precision4, 100));
+        static::assertFalse($money3Precision4->almostEqualTo($money4Precision4, 50));
+        static::assertTrue($money3Precision4->notAlmostEqualTo($money4Precision4, 50));
 
-        $money5Percision2 = Money::fromFloat(
+        $money5Precision2 = Money::fromFloat(
             123.50,
             new Currency('EUR', 2)
         );
-        $money6Percision2 = Money::fromFloat(
+        $money6Precision2 = Money::fromFloat(
             123.51,
             new Currency('EUR', 2)
         );
-        static::assertFalse($money5Percision2->equals($money6Percision2));
-        static::assertFalse($money5Percision2->almostEqualTo($money6Percision2, 0));
-        static::assertTrue($money5Percision2->almostEqualTo($money6Percision2, 1));
-        static::assertFalse($money5Percision2->notAlmostEqualTo($money6Percision2, 1));
+        static::assertFalse($money5Precision2->equals($money6Precision2));
+        static::assertFalse($money5Precision2->almostEqualTo($money6Precision2, 0));
+        static::assertTrue($money5Precision2->almostEqualTo($money6Precision2, 1));
+        static::assertFalse($money5Precision2->notAlmostEqualTo($money6Precision2, 1));
     }
 
     /**
