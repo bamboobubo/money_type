@@ -123,6 +123,11 @@ class Money
         return self::fromInt($integer, $currency);
     }
 
+    public static function EUR(int $int): Money
+    {
+        return self::fromInt($int, new Currency('EUR'));
+    }
+
     /**
      * @param PhpMoney $phpMoney
      * @param Money    $money
