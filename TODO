@@ -1,5 +1,6 @@
 TODO
 ====
+* Factory for Money Object
 * Test decorated Methods
 * Validator and Doctrine Config to XML Config.
 * Exception for Precision greater than 14 with init from Float

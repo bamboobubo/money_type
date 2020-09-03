@@ -1,6 +1,6 @@
 {
   "name": "bamboobubo/money_type",
-  "description": "Money Object Decorator with Doctrine and Jms Mapping and precsision settings",
+  "description": "Money Object Decorator with Doctrine and Jms Mapping and precision settings",
   "authors": [
     {
       "name": "René Gerritsen",
