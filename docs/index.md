@@ -121,6 +121,29 @@ $this->connection
     ->registerDoctrineTypeMapping('db_money_currency', 'money_currency');
 ```
 
+#### Serializer Mapping
+```php
+    /**
+     * @Serializer\Type("Re2bit\Types\Money<'decimal', 'EUR', 6>")
+     */
+    public ?Money $moneyDecimal;
+
+    /**
+     * @Serializer\Type("Re2bit\Types\Money<'string', 'DE_de'>")
+     */
+    public ?Money $moneyString;
+
+    /**
+     * @Serializer\Type("Re2bit\Types\Money<'integer', 'EUR'>")
+     */
+    public ?Money $moneyInteger;
+
+    /**
+     * @Serializer\Type("Re2bit\Types\Money<'float', 'EUR'>")
+     */
+    public ?Money $moneyFloat;
+```
+
 [serializer](serializer)
 [comparison](comparison)
 [construction](construction)
