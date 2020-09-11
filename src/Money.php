@@ -123,9 +123,32 @@ class Money
         return self::fromInt($integer, $currency);
     }
 
-    public static function EUR(int $int): Money
+    /**
+     * @param mixed $value
+     *
+     * @return Money
+     * @deprecated
+     */
+    public static function EUR($value): Money
     {
-        return self::fromInt($int, new Currency('EUR'));
+        if (is_int($value)) {
+            return self::fromInt($value, new Currency('EUR'));
+        }
+        if (is_float($value)) {
+            return self::fromFloat($value, new Currency('EUR'));
+        }
+        if (is_string($value)) {
+            return self::fromDecimalString($value, new Currency('EUR'));
+        }
+        throw new \DomainException('Invalid Value', 1599807600739);
+    }
+
+    /**
+     * @deprecated
+     */
+    public static function create(float $amount, string $currency): Money
+    {
+        return self::fromFloat($amount, new Currency($currency));
     }
 
     /**
@@ -625,5 +648,43 @@ class Money
                 );
             }
         }
+    }
+
+    public function isLessOrEqualZero(): bool
+    {
+        $this->ensureInitialized();
+        return $this->isZero() || $this->isNegative();
+    }
+
+    /**
+     * @deprecated use lessThan
+     */
+    public function isLessThan(Money $money): bool
+    {
+        return $this->lessThan($money);
+    }
+
+    /**
+     * @deprecated use greaterThanOrEqual
+     */
+    public function isBiggerOrEqual(Money $money): bool
+    {
+        return $this->greaterThanOrEqual($money);
+    }
+
+    /**
+     * @deprecated use equals
+     */
+    public function isEqual(Money $money): bool
+    {
+        return $this->equals($money);
+    }
+
+    /**
+     * @deprecated
+     */
+    public function hasSameCurrencyAs(Money $other): bool
+    {
+        return $this->isSameCurrency($other);
     }
 }
