@@ -4,24 +4,13 @@ namespace Re2bit\Types;
 
 use InvalidArgumentException;
 use Re2bit\Types\Money\ISO4217;
-use Symfony\Component\Validator\Constraints as Assert;
 
 class Currency
 {
     const CODE_DELIMITER = '_';
-    /**
-     * @Assert\Type(type="string")
-     * @Assert\Currency()
-     * @Assert\NotBlank()
-     * @Assert\NotNull()
-     */
+
     private string $code;
 
-    /**
-     * @Assert\Type(type="integer")
-     * @Assert\NotBlank()
-     * @Assert\NotNull()
-     */
     private int $precision;
 
     /**

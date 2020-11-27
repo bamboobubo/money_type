@@ -2,7 +2,9 @@
 
 namespace Re2bit\Types\Tests;
 
-use Fixtures\Doctrine\Entity\JmsTest\Basket;
+use DomainException;
+use Fixtures\Doctrine\Entity\JmsSerializerTest\Basket;
+use JMS\Serializer\ArrayTransformerInterface;
 use JMS\Serializer\Handler\HandlerRegistryInterface;
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\SerializerInterface;
@@ -10,9 +12,10 @@ use Re2bit\Types\Currency;
 use Re2bit\Types\Jms\Handler\InvalidCurrencyException;
 use Re2bit\Types\Jms\Handler\InvalidPrecisionException;
 use Re2bit\Types\Jms\Handler\MoneyHandler;
+use Re2bit\Types\MetadataLoader\JmsMetadataDirectoryFactory;
 use Re2bit\Types\Money;
 
-class JmsTest extends AbstractDoctrineTest
+class JmsSerializerTest extends AbstractDoctrineTest
 {
     public function testJmsDeserialize(): void
     {
@@ -36,25 +39,6 @@ class JmsTest extends AbstractDoctrineTest
             ),
             $money
         );
-    }
-
-    public function testValidationErrorsOnDeserialize(): void
-    {
-        $serializer = $this->createArrayTransformer();
-        /** @var Money $money */
-        $money = $serializer->fromArray(
-            [
-                'amount'   => '123',
-                'currency' => [
-                    'code'      => 'eur',
-                    'precision' => 2,
-                ],
-            ],
-            Money::class
-        );
-        $validator = $this->createValidator();
-        $errors = $validator->validate($money);
-        static::assertNotEmpty($errors);
     }
 
     /**
@@ -203,6 +187,39 @@ class JmsTest extends AbstractDoctrineTest
         }
     }
 
+    /**
+     * @return array<string,array<mixed>>
+     */
+    public function deserializeArrayDataProvider(): array
+    {
+        return [
+            'moneyFloatAsStringEur' => [
+                '{"money_array":{"amount": 1.23,"currency":{"code": "EUR","precision": 2}}}',
+                1.23,
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider deserializeArrayDataProvider
+     *
+     * @param string $json
+     * @param float  $expectedResult
+     */
+    public function testDeserializeOfArray(string $json, float $expectedResult): void
+    {
+        $serializer = $this->createSerializer();
+        /** @var Basket $model */
+        $model = $serializer->deserialize($json, Basket::class, 'json');
+        $moneyFloat = $model->moneyArray;
+        static::assertInstanceOf(Money::class, $moneyFloat);
+        if ($moneyFloat instanceof Money) {
+            static::assertSame($expectedResult, $moneyFloat->toFloat());
+            static::assertEquals('EUR', $moneyFloat->getCurrency()->getCodeWithoutPrecision());
+            static::assertEquals(2, $moneyFloat->getCurrency()->getPrecision());
+        }
+    }
+
     public function testSerializeMoneyObject(): void
     {
         $serializer = $this->createSerializer();
@@ -211,11 +228,12 @@ class JmsTest extends AbstractDoctrineTest
         $model->moneyString = Money::EUR(123);
         $model->moneyDecimal = Money::fromInt(1230000, new Currency('EUR', 6));
         $model->moneyInteger = Money::EUR(123);
+        $model->moneyArray = Money::EUR(123);
         $json = $serializer->serialize($model, 'json');
 
         static::assertJson($json);
         static::assertJsonStringEqualsJsonFile(
-            __DIR__ . '/Fixtures/Doctrine/Entity/JmsTest/expected_serialize.json',
+            __DIR__ . '/Fixtures/Doctrine/Entity/JmsSerializerTest/expected_serialize.json',
             $json
         );
     }
@@ -267,9 +285,9 @@ class JmsTest extends AbstractDoctrineTest
     /**
      * @dataProvider invalidMoneyExceptionDataProvider
      *
-     * @param string $property
-     * @param Money  $money
-     * @param class-string<\Throwable> $expectedException
+     * @param string         $property
+     * @param Money $money
+     * @param        class-string<\Throwable> $expectedException
      */
     public function testExceptionOnInvalidCurrencyForProperty(string $property, Money $money, string $expectedException): void
     {
@@ -290,6 +308,7 @@ class JmsTest extends AbstractDoctrineTest
     {
         return SerializerBuilder::create()
            ->addDefaultHandlers()
+           ->addMetadataDir(JmsMetadataDirectoryFactory::create())
            ->configureHandlers(
                function (HandlerRegistryInterface $handlerRegistry) {
                    $handlerRegistry->registerSubscribingHandler(
@@ -297,5 +316,16 @@ class JmsTest extends AbstractDoctrineTest
                    );
                }
            )->build();
+    }
+
+    protected function createArrayTransformer(): ArrayTransformerInterface
+    {
+        $serializerBuilder = SerializerBuilder::create();
+        $serializerBuilder->addMetadataDir(JmsMetadataDirectoryFactory::create());
+        $arrayTransformer = $serializerBuilder->build();
+        if (!$arrayTransformer instanceof ArrayTransformerInterface) {
+            throw new DomainException('No Array Transformer available');
+        }
+        return $arrayTransformer;
     }
 }

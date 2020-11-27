@@ -9,7 +9,7 @@ class PrecisionException extends DomainException
 {
     private const MESSAGE = 'Precision mismatch. %s expected but %s given';
 
-    private function __construct($message = "", $code = 0, Throwable $previous = null)
+    private function __construct(string $message = "", int $code = 0, Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

@@ -2,17 +2,11 @@
 
 namespace Re2bit\Types;
 
-use Doctrine\ORM\Mapping as ORM;
 use DomainException;
 use InvalidArgumentException;
-use JMS\Serializer\Annotation as Serializer;
 use Money\Money as PhpMoney;
 use NumberFormatter;
-use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Embeddable()
- */
 class Money
 {
     private const NON_BREAKING_SPACE = "\xc2\xa0";
@@ -33,18 +27,8 @@ class Money
 
     public const ROUND_HALF_NEGATIVE_INFINITY = 8;
 
-    /**
-     * @Assert\Valid()
-     * @ORM\Column(name="currency", type="money_currency")
-     */
     private Currency $currency;
 
-    /**
-     * @Assert\Type(type="string")
-     * @Assert\NotBlank()
-     * @Assert\NotNull()
-     * @ORM\Column(name="amount", type="money_amount")
-     */
     private string $amount;
 
     /** @var PhpMoney */
@@ -54,7 +38,7 @@ class Money
     {
     }
 
-    public static function fromFloat(float $amount, Currency $currency, int $roundingMode = self::ROUND_HALF_UP): self
+    public static function fromFloat(float $amount, Currency $currency, int $roundingMode = self::ROUND_HALF_UP): Money
     {
         $instance = new self();
         $precision = $currency->getPrecision();
@@ -70,16 +54,16 @@ class Money
             )
         );
         $instance->currency = $currency;
-        $instance->ensureInitialized();
+        $instance->initialize();
         return $instance;
     }
 
-    public static function fromInt(int $amount, Currency $currency): self
+    public static function fromInt(int $amount, Currency $currency): Money
     {
         $instance = new self();
         $instance->amount = (string)$amount;
         $instance->currency = $currency;
-        $instance->ensureInitialized();
+        $instance->initialize();
         return $instance;
     }
 
@@ -87,7 +71,7 @@ class Money
         string $amount,
         NumberFormatter $numberFormatter,
         int $roundingMode = self::ROUND_HALF_UP
-    ): self {
+    ): Money {
         $amount = str_replace(' ', self::NON_BREAKING_SPACE, $amount);
         $curr = '';
         $amountFloat = $numberFormatter->parseCurrency($amount, $curr);
@@ -140,7 +124,23 @@ class Money
         if (is_string($value)) {
             return self::fromDecimalString($value, new Currency('EUR'));
         }
-        throw new \DomainException('Invalid Value', 1599807600739);
+        throw new DomainException('Invalid Value', 1599807600739);
+    }
+
+    /**
+     * @param mixed[] $data
+     *
+     * @return Money
+     */
+    public static function fromArray($data): Money
+    {
+        $amount = $data['amount'] ?? null;
+        $currency = $data['currency'] ?? null;
+        if (null === $amount) {
+            throw new DomainException('Expected "amount" for Money Array', 1606203192839);
+        }
+        $currency = new Currency($currency['code'] ?? null, $currency['precision']);
+        return self::fromFloat((float)$amount, $currency);
     }
 
     /**
@@ -152,8 +152,8 @@ class Money
     }
 
     /**
-     * @param PhpMoney $phpMoney
-     * @param Money    $money
+     * @param PhpMoney       $phpMoney
+     * @param Money $money
      *
      * @return Money
      */
@@ -166,10 +166,7 @@ class Money
         return $instance;
     }
 
-    /**
-     * @Serializer\PostDeserialize()
-     */
-    private function ensureInitialized(): void
+    private function initialize(): void
     {
         if (null === $this->money) {
             $phpMoneyCurrency = $this->currency->toPhpMoneyCurrency();
@@ -182,7 +179,6 @@ class Money
 
     private function unwrap(): PhpMoney
     {
-        $this->ensureInitialized();
         return $this->money;
     }
 
@@ -191,7 +187,6 @@ class Money
      */
     public function isSameCurrency(Money $other): bool
     {
-        $this->ensureInitialized();
         return $this->money->isSameCurrency($other->unwrap());
     }
 
@@ -200,7 +195,6 @@ class Money
      */
     public function equals(Money $other): bool
     {
-        $this->ensureInitialized();
         $this->ensureSamePrecision($other);
         return $this->money->equals($other->unwrap());
     }
@@ -208,10 +202,10 @@ class Money
     /**
      * ≈ (U+2248, almost equal to)
      *
-     * @param Money    $other
-     * @param int      $epsilon
-     * @param int|null $precision
-     * @param int      $roundingMode
+     * @param Money $other
+     * @param int            $epsilon
+     * @param int|null       $precision
+     * @param int            $roundingMode
      *
      * @return bool
      */
@@ -221,7 +215,6 @@ class Money
         int $precision = null,
         int $roundingMode = self::ROUND_HALF_UP
     ): bool {
-        $this->ensureInitialized();
         if (null === $precision) {
             $precision = $this->getCurrency()->getPrecision();
         }
@@ -276,7 +269,6 @@ class Money
      */
     public function compare(Money $other): int
     {
-        $this->ensureInitialized();
         $this->ensureSamePrecision($other);
         return $this->money->compare($other->unwrap());
     }
@@ -286,14 +278,12 @@ class Money
      */
     public function greaterThan(Money $other): bool
     {
-        $this->ensureInitialized();
         $this->ensureSamePrecision($other);
         return $this->money->greaterThan($other->unwrap());
     }
 
     public function greaterThanOrEqual(Money $other): bool
     {
-        $this->ensureInitialized();
         $this->ensureSamePrecision($other);
         return $this->money->greaterThanOrEqual($other->unwrap());
     }
@@ -303,14 +293,12 @@ class Money
      */
     public function lessThan(Money $other): bool
     {
-        $this->ensureInitialized();
         $this->ensureSamePrecision($other);
         return $this->money->lessThan($other->unwrap());
     }
 
     public function lessThanOrEqual(Money $other): bool
     {
-        $this->ensureInitialized();
         $this->ensureSamePrecision($other);
         return $this->money->lessThanOrEqual($other->unwrap());
     }
@@ -320,7 +308,6 @@ class Money
      */
     public function getAmount(): string
     {
-        $this->ensureInitialized();
         return $this->amount;
     }
 
@@ -361,7 +348,6 @@ class Money
      */
     public function add(Money ...$addends): Money
     {
-        $this->ensureInitialized();
         $this->ensureSamePrecision(...$addends);
         $unwrappedAddends = self::unwrapMoneyArray(...$addends);
         return self::fromPhpMoney($this->money->add(...$unwrappedAddends), $this);
@@ -377,7 +363,6 @@ class Money
      */
     public function subtract(Money ...$subtrahends): Money
     {
-        $this->ensureInitialized();
         $this->ensureSamePrecision(...$subtrahends);
         $unwrappedSubtrahends = self::unwrapMoneyArray(...$subtrahends);
         return self::fromPhpMoney(
@@ -397,7 +382,6 @@ class Money
      */
     public function multiply($multiplier, int $roundingMode = self::ROUND_HALF_UP): Money
     {
-        $this->ensureInitialized();
         return self::fromPhpMoney(
             $this->money->multiply($multiplier, $roundingMode),
             $this
@@ -415,7 +399,6 @@ class Money
      */
     public function divide($divisor, int $roundingMode = self::ROUND_HALF_UP): Money
     {
-        $this->ensureInitialized();
         return self::fromPhpMoney(
             $this->money->divide($divisor, $roundingMode),
             $this
@@ -433,7 +416,6 @@ class Money
      */
     public function mod(Money $divisor): Money
     {
-        $this->ensureInitialized();
         $this->ensureSamePrecision($divisor);
         return self::fromPhpMoney(
             $this->money->mod($divisor->unwrap()),
@@ -450,7 +432,6 @@ class Money
      */
     public function allocate(array $ratios): array
     {
-        $this->ensureInitialized();
         return self::warpPhpMoneyArray($this, ...$this->money->allocate($ratios));
     }
 
@@ -461,13 +442,11 @@ class Money
      */
     public function allocateTo(int $n): array
     {
-        $this->ensureInitialized();
         return self::warpPhpMoneyArray($this, ...$this->money->allocateTo($n));
     }
 
     public function ratioOf(Money $money): string
     {
-        $this->ensureInitialized();
         return $this->money->ratioOf($money->unwrap());
     }
 
@@ -478,7 +457,6 @@ class Money
 
     public function negative(): Money
     {
-        $this->ensureInitialized();
         return self::fromPhpMoney($this->money->negative(), $this);
     }
 
@@ -487,7 +465,6 @@ class Money
      */
     public function isZero(): bool
     {
-        $this->ensureInitialized();
         return $this->money->isZero();
     }
 
@@ -496,7 +473,6 @@ class Money
      */
     public function isPositive(): bool
     {
-        $this->ensureInitialized();
         return $this->money->isPositive();
     }
 
@@ -505,7 +481,6 @@ class Money
      */
     public function isNegative(): bool
     {
-        $this->ensureInitialized();
         return $this->money->isNegative();
     }
 
@@ -518,7 +493,7 @@ class Money
      *
      * @psalm-pure
      */
-    public static function min(self $first, self ...$collection): Money
+    public static function min(Money $first, Money ...$collection): Money
     {
         $firstPhpMoney = $first->unwrap();
         $phpMoneyCollection = self::unwrapMoneyArray(...$collection);
@@ -537,7 +512,7 @@ class Money
      *
      * @psalm-pure
      */
-    public static function max(self $first, self ...$collection): Money
+    public static function max(Money $first, Money ...$collection): Money
     {
         $firstPhpMoney = $first->unwrap();
         $first->ensureSamePrecision(...$collection);
@@ -556,7 +531,7 @@ class Money
      *
      * @psalm-pure
      */
-    public static function sum(self $first, self ...$collection): Money
+    public static function sum(Money $first, Money ...$collection): Money
     {
         $firstPhpMoney = $first->unwrap();
         $first->ensureSamePrecision(...$collection);
@@ -588,7 +563,6 @@ class Money
 
     public function toFloat(): float
     {
-        $this->ensureInitialized();
         return round(
             ((int)$this->amount) / (10 ** $this->currency->getPrecision()),
             $this->currency->getPrecision()
@@ -597,7 +571,6 @@ class Money
 
     public function toString(NumberFormatter $currencyFormatter): string
     {
-        $this->ensureInitialized();
         $formattedMoney = $currencyFormatter->formatCurrency($this->toFloat(), $this->currency->getCode());
         if (!$formattedMoney) {
             throw new DomainException($currencyFormatter->getErrorMessage(), $currencyFormatter->getErrorCode());
@@ -622,6 +595,20 @@ class Money
     public function toInt(): int
     {
         return (int)$this->amount;
+    }
+
+    /**
+     * @return mixed[]
+     */
+    public function toArray(): array
+    {
+        return [
+            'amount'   => $this->toFloat(),
+            'currency' => [
+                'code'      => $this->getCurrency()->getCodeWithoutPrecision(),
+                'precision' => $this->getCurrency()->getPrecision(),
+            ],
+        ];
     }
 
     public function __toString(): string
@@ -652,7 +639,6 @@ class Money
 
     public function isLessOrEqualZero(): bool
     {
-        $this->ensureInitialized();
         return $this->isZero() || $this->isNegative();
     }
 

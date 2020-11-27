@@ -2,7 +2,7 @@ TODO
 ====
 * Factory for Money Object
 * Test decorated Methods
-* Validator and Doctrine Config to XML Config.
 * Exception for Precision greater than 14 with init from Float
-* Symfony Serializer Normalizer
+* JmsSerializer - different Types and I18N through Context
 * \Re2bit\Types\Money::__construct public
+* Generator Command to Create Types

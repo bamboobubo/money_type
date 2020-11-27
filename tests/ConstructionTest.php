@@ -63,4 +63,20 @@ class ConstructionTest extends TestCase
         static::assertSame('123', $money->getAmount());
         static::assertSame('EUR', $money->getCurrency()->getCode());
     }
+
+    public function testFromArray(): void
+    {
+        $data = [
+            'amount'   => '123',
+            'currency' => [
+                'code'      => 'EUR',
+                'precision' => 2,
+            ],
+        ];
+        $money = Money::fromArray($data);
+        static::assertSame('12300', $money->getAmount());
+        static::assertSame(123.0, $money->toFloat());
+        static::assertSame('EUR', $money->getCurrency()->getCode());
+        static::assertSame(2, $money->getCurrency()->getPrecision());
+    }
 }

@@ -19,9 +19,10 @@
   },
   "suggest": {
     "monolog/monolog": "Allows more advanced logging of the application flow",
-    "jms/serializer": "Allows u to use JmsResourceReceiver",
-    "doctrine/doctrine-orm": "Let u handle the Types by ORM",
-    "symfony/validator": "Validation for Types"
+    "jms/serializer": "Serialize/Deserialize Money Object to Json",
+    "symfony/serializer": "Serialize/Deserialize Money Object to Json",
+    "doctrine/doctrine-orm": "Handle the Money by Doctrine ORM",
+    "symfony/validator": "Validation for Money"
   },
   "require-dev": {
     "ext-pdo_sqlite": "*",
@@ -30,13 +31,16 @@
     "monolog/monolog": "^2.0",
     "doctrine/doctrine-module": "^2.1",
     "doctrine/doctrine-orm-module": "^2.1",
-    "symfony/validator": "^4.3",
+    "symfony/validator": "^5.0",
     "roave/security-advisories": "dev-master",
     "phpstan/phpstan": "^0.12.25",
     "friendsofphp/php-cs-fixer": "^2.16",
     "captainhook/captainhook": "^5.3",
     "phpstan/phpstan-doctrine": "^0.12.13",
-    "otobank/phpstan-doctrine-criteria": "^0.2.0"
+    "otobank/phpstan-doctrine-criteria": "^0.2.0",
+    "symfony/config": "^5.0",
+    "symfony/serializer": "^5.0",
+    "symfony/property-info": "^5.1"
   },
   "autoload": {
     "psr-4": {

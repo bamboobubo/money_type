@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Re2bit\Types\Jms\Handler;
 
 use DomainException;
+use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\GraphNavigatorInterface;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use JMS\Serializer\SerializationContext;
@@ -16,11 +17,13 @@ use Re2bit\Types\Money;
 
 final class MoneyHandler implements SubscribingHandlerInterface
 {
+    private const MODE_ARRAY = 'array';
     private const MODE_DECIMAL = 'decimal';
     private const MODE_STRING = 'string';
     private const MODE_INTEGER = 'integer';
     private const MODE_FLOAT = 'float';
     private const MODES = [
+        self::MODE_ARRAY,
         self::MODE_DECIMAL,
         self::MODE_STRING,
         self::MODE_INTEGER,
@@ -72,13 +75,15 @@ final class MoneyHandler implements SubscribingHandlerInterface
                 return $this->serializeInteger($money, $type);
             case self::MODE_FLOAT:
                 return $this->serializeFloat($money, $type);
+            case self::MODE_ARRAY:
+                return $this->serializeArray($money);
         }
         throw new DomainException('Mode is not Valid', 1598281688658);
     }
 
     /**
      * @param Money $money
-     * @param mixed[] $type
+     * @param mixed[]        $type
      *
      * @return void
      */
@@ -113,7 +118,7 @@ final class MoneyHandler implements SubscribingHandlerInterface
 
     /**
      * @param Money $money
-     * @param mixed[] $type
+     * @param mixed[]        $type
      *
      * @return string
      */
@@ -126,7 +131,7 @@ final class MoneyHandler implements SubscribingHandlerInterface
 
     /**
      * @param Money $money
-     * @param mixed[] $type
+     * @param mixed[]        $type
      *
      * @return string
      */
@@ -139,7 +144,7 @@ final class MoneyHandler implements SubscribingHandlerInterface
 
     /**
      * @param Money $money
-     * @param mixed[] $type
+     * @param mixed[]        $type
      *
      * @return int
      */
@@ -151,7 +156,7 @@ final class MoneyHandler implements SubscribingHandlerInterface
 
     /**
      * @param Money $money
-     * @param mixed[] $type
+     * @param mixed[]        $type
      *
      * @return float
      */
@@ -166,13 +171,29 @@ final class MoneyHandler implements SubscribingHandlerInterface
     }
 
     /**
+     * @param Money $money
+     *
+     * @return mixed[]
+     */
+    private function serializeArray(Money $money): array
+    {
+        return [
+            'amount'   => $money->toFloat(),
+            'currency' => [
+                'code'      => $money->getCurrency()->getCode(),
+                'precision' => $money->getCurrency()->getPrecision(),
+            ],
+        ];
+    }
+
+    /**
      * @param DeserializationVisitorInterface $visitor
      * @param mixed                           $data
      * @param mixed[]                         $type
      *
      * @return Money
      */
-    public function deserialize(DeserializationVisitorInterface $visitor, $data, array $type): Money
+    public function deserialize(DeserializationVisitorInterface $visitor, $data, array $type, DeserializationContext $context): Money
     {
         $mode = $this->getMode($type);
         switch ($mode) {
@@ -184,6 +205,8 @@ final class MoneyHandler implements SubscribingHandlerInterface
                 return $this->parseInteger($data, $type);
             case self::MODE_FLOAT:
                 return $this->parseFloat($data, $type);
+            case self::MODE_ARRAY:
+                return $this->parseArray($data);
         }
         throw new DomainException('Mode is not Valid', 1597732468436);
     }
@@ -258,6 +281,16 @@ final class MoneyHandler implements SubscribingHandlerInterface
                 $precision
             )
         );
+    }
+
+    /**
+     * @param mixed   $data
+     *
+     * @return Money
+     */
+    private function parseArray($data): Money
+    {
+        return Money::fromArray($data);
     }
 
     /**

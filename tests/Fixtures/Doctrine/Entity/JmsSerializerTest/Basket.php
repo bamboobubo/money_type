@@ -1,6 +1,6 @@
 <?php
 
-namespace Fixtures\Doctrine\Entity\JmsTest;
+namespace Fixtures\Doctrine\Entity\JmsSerializerTest;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
@@ -37,4 +37,9 @@ class Basket
      * @Serializer\Type("Re2bit\Types\Money<'float', 'EUR'>")
      */
     public ?Money $moneyFloat;
+
+    /**
+     * @Serializer\Type("Re2bit\Types\Money<'array'>")
+     */
+    public ?Money $moneyArray;
 }

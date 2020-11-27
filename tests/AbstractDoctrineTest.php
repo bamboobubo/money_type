@@ -14,22 +14,17 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 use Doctrine\ORM\Tools\SchemaTool;
-use DomainException;
-use JMS\Serializer\ArrayTransformerInterface;
-use JMS\Serializer\SerializerBuilder;
+use Doctrine\Persistence\Mapping\Driver\MappingDriverChain;
 use PHPUnit\Framework\TestCase;
-use Re2bit\Types\DBAL\Money\AmountType;
-use Re2bit\Types\DBAL\Money\CurrencyType;
-use Re2bit\Types\DBAL\Money\MoneyEur16Type;
-use Re2bit\Types\DBAL\Money\MoneyEur5Type;
-use Re2bit\Types\DBAL\Money\MoneyEur8Type;
-use Re2bit\Types\DBAL\Money\MoneyEurType;
+use Re2bit\Types\Doctrine\DBAL\Money\AmountType;
+use Re2bit\Types\Doctrine\DBAL\Money\CurrencyType;
+use Re2bit\Types\Doctrine\DBAL\Money\MoneyEur16Type;
+use Re2bit\Types\Doctrine\DBAL\Money\MoneyEur5Type;
+use Re2bit\Types\Doctrine\DBAL\Money\MoneyEur8Type;
+use Re2bit\Types\Doctrine\DBAL\Money\MoneyEurType;
+use Re2bit\Types\MetadataLoader\DoctrineMetadataDriverFactory;
 use ReflectionClass;
 use RuntimeException;
-use Symfony\Component\Validator\Mapping\Loader\AnnotationLoader;
-use Symfony\Component\Validator\Validator\RecursiveValidator;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Validator\ValidatorBuilder;
 
 abstract class AbstractDoctrineTest extends TestCase
 {
@@ -116,6 +111,7 @@ abstract class AbstractDoctrineTest extends TestCase
 
     private function createConnection(): Connection
     {
+        /** @phpstan-ignore-next-line */
         return DriverManager::getConnection([
             'driver' => 'pdo_sqlite',
             'memory' => true,
@@ -124,16 +120,26 @@ abstract class AbstractDoctrineTest extends TestCase
 
     private function createEntityManager(Connection $con, ?Configuration $cfg = null): EntityManagerInterface
     {
-        $metaDataFolder = __DIR__ . '/Fixtures/Doctrine/Entity/' . (new ReflectionClass($this))->getShortName();
+        $fixtureNamespace = (new ReflectionClass($this))->getShortName();
+        $metaDataFolder = __DIR__ . '/Fixtures/Doctrine/Entity/' . $fixtureNamespace;
         if (!file_exists($metaDataFolder)) {
             static::markTestSkipped('Invalid Test Configuration. Doctrine Entities missing');
         }
 
         if (!$cfg) {
             $cfg = new Configuration();
-            $cfg->setMetadataDriverImpl(new AnnotationDriver(new AnnotationReader(), [
-                $metaDataFolder,
-            ]));
+
+            $annotationDriver = new AnnotationDriver(
+                new AnnotationReader(),
+                [$metaDataFolder]
+            );
+            $mappingDriverChain = new MappingDriverChain();
+            $mappingDriverChain->setDefaultDriver(DoctrineMetadataDriverFactory::create());
+            $mappingDriverChain->addDriver(
+                $annotationDriver,
+                'Fixtures\Doctrine\Entity\\' . $fixtureNamespace
+            );
+            $cfg->setMetadataDriverImpl($mappingDriverChain);
         }
 
         $cfg->setAutoGenerateProxyClasses(true);
@@ -141,30 +147,5 @@ abstract class AbstractDoctrineTest extends TestCase
         $cfg->setProxyDir(sys_get_temp_dir() . '/money-type-proxies');
 
         return EntityManager::create($con, $cfg);
-    }
-
-    /**
-     * @return RecursiveValidator|ValidatorInterface
-     */
-    protected function createValidator()
-    {
-        $builder = new ValidatorBuilder();
-        $builder->addLoader(
-            new AnnotationLoader(
-                new AnnotationReader()
-            )
-        );
-
-        return $builder->getValidator();
-    }
-
-    protected function createArrayTransformer(): ArrayTransformerInterface
-    {
-        $serializerBuilder = SerializerBuilder::create();
-        $arrayTransformer = $serializerBuilder->build();
-        if (!$arrayTransformer instanceof ArrayTransformerInterface) {
-            throw new DomainException('No Array Transformer available');
-        }
-        return $arrayTransformer;
     }
 }

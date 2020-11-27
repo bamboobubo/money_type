@@ -1,6 +1,6 @@
 <?php
 
-namespace Re2bit\Types\DBAL\Money;
+namespace Re2bit\Types\Doctrine\DBAL\Money;
 
 class MoneyEurType extends AbstractCurrencyType
 {

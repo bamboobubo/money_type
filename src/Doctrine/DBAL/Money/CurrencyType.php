@@ -1,21 +1,17 @@
 <?php
 
-namespace Re2bit\Types\DBAL\Money;
+namespace Re2bit\Types\Doctrine\DBAL\Money;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\ConversionException;
-use Doctrine\DBAL\Types\DecimalType;
+use Doctrine\DBAL\Types\StringType;
 use Exception;
 use Re2bit\Types\Currency;
-use Re2bit\Types\Money;
+use Re2bit\Types\Money\ISO4217;
 
-abstract class AbstractCurrencyType extends DecimalType
+class CurrencyType extends StringType
 {
-    public const NAME = 'money';
-
-    public const PRECISION = 2;
-
-    public const CURRENCY = '';
+    public const NAME = 'money_currency';
 
     /**
      * Gets the name of this type.
@@ -24,7 +20,15 @@ abstract class AbstractCurrencyType extends DecimalType
      */
     public function getName()
     {
-        return static::NAME;
+        return self::NAME;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDefaultLength(AbstractPlatform $platform)
+    {
+        return 3;
     }
 
     /**
@@ -32,21 +36,18 @@ abstract class AbstractCurrencyType extends DecimalType
      */
     public function convertToDatabaseValue($value, AbstractPlatform $platform)
     {
-        if ($value instanceof Money && $value->getCurrency()->getPrecision() === static::PRECISION) {
-            return $value->toDecimalString(static::PRECISION);
+        if ($value instanceof Currency) {
+            return $value->getCode();
         }
 
-        if ($value === null) {
-            return null;
+        if (isset(ISO4217::PRECISION[$value])) {
+            return $value;
         }
 
         throw ConversionException::conversionFailedInvalidType(
             $value,
             $this->getName(),
-            [
-                'null',
-                Money::class . ' with precision ' . static::PRECISION . ' and Currency ' . static::CURRENCY,
-            ]
+            ['ISO4217-STRING', Currency::class]
         );
     }
 
@@ -60,21 +61,15 @@ abstract class AbstractCurrencyType extends DecimalType
         }
 
         try {
-            $money = Money::fromDecimalString(
-                $value,
-                new Currency(
-                    static::CURRENCY,
-                    static::PRECISION,
-                )
-            );
+            $currency = new Currency($value);
         } catch (Exception $e) {
             throw ConversionException::conversionFailedFormat(
                 $value,
                 $this->getName(),
-                '%.' . static::PRECISION . 'F'
+                $platform->getDateTimeFormatString()
             );
         }
 
-        return $money;
+        return $currency;
     }
 }
