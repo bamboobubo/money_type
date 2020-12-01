@@ -102,8 +102,8 @@ class Money
 
     public static function fromDecimalString(string $decimalString, Currency $currency): Money
     {
-        $parts = explode('.', $decimalString);
-        $integer = (int)implode('', $parts);
+        [$a, $b] = explode('.', $decimalString);
+        $integer = (int)implode('', [$a, substr($b, 0, $currency->getPrecision())]);
         return self::fromInt($integer, $currency);
     }
 
