@@ -15,7 +15,8 @@
     "ext-iconv": "*",
     "moneyphp/money": "^3.3",
     "ext-intl": "*",
-    "symfony/intl": "^5.1"
+    "symfony/intl": "^5.1",
+    "doctrine/orm": "^2.7"
   },
   "suggest": {
     "monolog/monolog": "Allows more advanced logging of the application flow",
@@ -29,8 +30,6 @@
     "phpunit/phpunit": "^7.5||^8.0",
     "jms/serializer": "^2.2||^3.0",
     "monolog/monolog": "^2.0",
-    "doctrine/doctrine-module": "^2.1",
-    "doctrine/doctrine-orm-module": "^2.1",
     "symfony/validator": "^5.0",
     "roave/security-advisories": "dev-master",
     "phpstan/phpstan": "^0.12.25",

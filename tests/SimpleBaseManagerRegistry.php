@@ -2,9 +2,9 @@
 
 namespace Re2bit\Types\Tests;
 
-use Doctrine\Common\Persistence\AbstractManagerRegistry;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMException;
+use Doctrine\Persistence\AbstractManagerRegistry;
 use InvalidArgumentException;
 use LogicException;
 use RuntimeException;
