@@ -39,7 +39,8 @@
     "otobank/phpstan-doctrine-criteria": "^0.2.0",
     "symfony/config": "^5.0",
     "symfony/serializer": "^5.0",
-    "symfony/property-info": "^5.1"
+    "symfony/property-info": "^5.1",
+    "phpmd/phpmd": "^2.9"
   },
   "autoload": {
     "psr-4": {
@@ -55,7 +56,8 @@
     "test": [
       "vendor/bin/phpunit",
       "vendor/bin/php-cs-fixer --config=.php_cs.dist fix --verbose --dry-run",
-      "vendor/bin/phpstan analyse --level 8 -c phpstan.neon ."
+      "vendor/bin/phpmd src text rules.xml",
+      "vendor/bin/phpstan analyse --level max -c phpstan.neon ."
     ],
     "fixcs": [
       "vendor/bin/php-cs-fixer --config=.php_cs.dist fix --verbose"

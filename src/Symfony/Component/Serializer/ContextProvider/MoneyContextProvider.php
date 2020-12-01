@@ -6,6 +6,7 @@ use function is_object;
 use Re2bit\Types\Money;
 use Re2bit\Types\Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
 use Symfony\Component\Serializer\Encoder\NormalizationAwareInterface;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\CacheableSupportsMethodInterface;
@@ -60,12 +61,15 @@ class MoneyContextProvider implements
     }
 
     /**
-     * @param mixed              $data
-     * @psalm-param class-string $type
-     * @param string             $type
-     * @param string|null        $format
-     * @param mixed[]            $context
      *
+     * @psalm-param class-string $type
+     *
+     * @param mixed       $data
+     * @param string      $type
+     * @param string|null $format
+     * @param mixed[]     $context
+     *
+     * @throws ExceptionInterface
      * @return mixed
      */
     public function denormalize($data, string $type, string $format = null, array $context = [])

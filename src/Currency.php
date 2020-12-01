@@ -3,6 +3,7 @@
 namespace Re2bit\Types;
 
 use InvalidArgumentException;
+use Money\Currency as PhpMoneyCurrency;
 use Re2bit\Types\Money\ISO4217;
 
 class Currency
@@ -14,8 +15,8 @@ class Currency
     private int $precision;
 
     /**
-     * @param string $currencyCode
-     * @param int    $precision
+     * @param string   $currencyCode
+     * @param int|null $precision
      */
     public function __construct(string $currencyCode, ?int $precision = null)
     {
@@ -38,9 +39,9 @@ class Currency
         return $this->precision;
     }
 
-    public function toPhpMoneyCurrency(): \Money\Currency
+    public function toPhpMoneyCurrency(): PhpMoneyCurrency
     {
-        return new \Money\Currency($this->code);
+        return new PhpMoneyCurrency($this->code);
     }
 
     public function getCode(): string

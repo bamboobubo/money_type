@@ -12,6 +12,8 @@ use Symfony\Component\Serializer\Exception\MappingException;
  * Annotation loader.
  *
  * @author René Gerritsen <rene.gerritsen@me.com>
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity")
+ * @SuppressWarnings(PHPMD.NPathComplexity")
  */
 class AnnotationLoader implements LoaderInterface
 {
