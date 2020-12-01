@@ -1,5 +1,5 @@
 <?php
-namespace Re2bit\Types\Money;
+namespace Re2bit\Types\Currency;
 
 class ISO4217
 {

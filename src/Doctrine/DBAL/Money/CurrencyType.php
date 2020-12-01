@@ -7,7 +7,7 @@ use Doctrine\DBAL\Types\ConversionException;
 use Doctrine\DBAL\Types\StringType;
 use Exception;
 use Re2bit\Types\Currency;
-use Re2bit\Types\Money\ISO4217;
+use Re2bit\Types\Currency\ISO4217;
 
 class CurrencyType extends StringType
 {

@@ -61,6 +61,9 @@
     ],
     "fixcs": [
       "vendor/bin/php-cs-fixer --config=.php_cs.dist fix --verbose"
+    ],
+    "dependency": [
+      "docker run --rm -v $PWD:/app mamuz/phpda"
     ]
   }
 }

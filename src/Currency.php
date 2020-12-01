@@ -4,7 +4,7 @@ namespace Re2bit\Types;
 
 use InvalidArgumentException;
 use Money\Currency as PhpMoneyCurrency;
-use Re2bit\Types\Money\ISO4217;
+use Re2bit\Types\Currency\ISO4217;
 
 class Currency
 {
