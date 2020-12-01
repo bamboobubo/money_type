@@ -8,7 +8,7 @@
             <constraint name="Valid"/>
         </property>
         <property name="amount">
-            <constraint name="type">
+            <constraint name="Type">
                 <option name="type">string</option>
             </constraint>
             <constraint name="NotBlank"></constraint>
@@ -17,7 +17,7 @@
     </class>
     <class name="Re2bit\Types\Currency">
         <property name="code">
-            <constraint name="type">
+            <constraint name="Type">
                 <option name="type">string</option>
             </constraint>
             <constraint name="NotBlank"></constraint>
@@ -25,7 +25,7 @@
             <constraint name="Currency"></constraint>
         </property>
         <property name="precision">
-            <constraint name="type">
+            <constraint name="Type">
                 <option name="type">integer</option>
             </constraint>
             <constraint name="NotBlank"></constraint>
