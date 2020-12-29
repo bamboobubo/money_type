@@ -65,7 +65,7 @@
       "vendor/bin/phpunit",
       "vendor/bin/php-cs-fixer --config=.php_cs.dist fix --verbose --dry-run",
       "vendor/bin/phpmd src text rules.xml",
-      "vendor/bin/phpstan analyse --level max -c phpstan.neon ."
+      "vendor/bin/phpstan analyse --memory-limit=1G --level max -c phpstan.neon ."
     ],
     "fixcs": [
       "vendor/bin/php-cs-fixer --config=.php_cs.dist fix --verbose"

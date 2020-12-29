@@ -4,5 +4,7 @@ vendor/*
 .DS_Store
 .php_cs.cache
 dependency.svg
+*.swp
+/.phpcd/
 .phpdoc
 build/*
