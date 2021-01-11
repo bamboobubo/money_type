@@ -1,0 +1,11 @@
+{
+  "require": {
+    "re2bit/collections": "^1.6"
+  },
+  "repositories": {
+    "bamboobubo-collections-local": {
+      "type": "composer",
+      "url": "../../collections"
+    }
+  }
+}

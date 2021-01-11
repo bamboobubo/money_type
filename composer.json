@@ -18,6 +18,13 @@
     "symfony/intl": "^5.1",
     "doctrine/orm": "^2.7"
   },
+  "extra": {
+    "merge-plugin": {
+      "include": [
+        ".composer/composer.local.json"
+      ]
+    }
+  },
   "suggest": {
     "monolog/monolog": "Allows more advanced logging of the application flow",
     "jms/serializer": "Serialize/Deserialize Money Object to Json",
@@ -40,7 +47,8 @@
     "symfony/config": "^5.0",
     "symfony/serializer": "^5.0",
     "symfony/property-info": "^5.1",
-    "phpmd/phpmd": "^2.9"
+    "phpmd/phpmd": "^2.9",
+    "wikimedia/composer-merge-plugin": "^1.4"
   },
   "autoload": {
     "psr-4": {
@@ -64,6 +72,9 @@
     ],
     "dependency": [
       "docker run --rm -v $PWD:/app mamuz/phpda"
+    ],
+    "phpdoc": [
+      "docker run --rm -v ${PWD}:/data phpdoc/phpdoc:3 phpdoc --setting=graphs.enabled=true"
     ]
   }
 }

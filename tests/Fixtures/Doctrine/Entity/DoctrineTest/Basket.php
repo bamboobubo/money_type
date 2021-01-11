@@ -4,6 +4,7 @@ namespace Fixtures\Doctrine\Entity\DoctrineTest;
 
 use Doctrine\ORM\Mapping as ORM;
 use Re2bit\Types\Money;
+use Re2bit\Types\MoneyEmbeddable;
 
 /**
  * @ORM\Entity()
@@ -18,7 +19,7 @@ class Basket
     protected $id;
 
     /**
-     * @ORM\Embedded(class=Money::class)
+     * @ORM\Embedded(class=MoneyEmbeddable::class)
      */
     protected Money $money;
 

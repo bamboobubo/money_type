@@ -6,7 +6,6 @@ use Doctrine\Common\Annotations\Reader;
 use Re2bit\Types\Symfony\Component\Serializer\Annotation\Money;
 use Re2bit\Types\Symfony\Component\Serializer\Mapping\AttributeMetadata;
 use Re2bit\Types\Symfony\Component\Serializer\Mapping\ClassMetadataInterface;
-use Symfony\Component\Serializer\Exception\MappingException;
 
 /**
  * Annotation loader.
@@ -78,9 +77,6 @@ class AnnotationLoader implements LoaderInterface
                 }
 
                 if ($annotation instanceof Money) {
-                    if (!$accessorOrMutator) {
-                        throw new MappingException(sprintf('Money on "%s::%s" cannot be added. Money can only be added on methods beginning with "get" or "set".', $className, $method->name));
-                    }
                     $attributeMetadata->setCode($annotation->getCode());
                     $attributeMetadata->setType($annotation->getType());
                     $attributeMetadata->setPrecision($annotation->getPrecision());

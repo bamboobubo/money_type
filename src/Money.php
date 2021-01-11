@@ -7,6 +7,9 @@ use InvalidArgumentException;
 use Money\Money as PhpMoney;
 use NumberFormatter;
 
+/**
+ * @filesource
+ */
 class Money
 {
     private const NON_BREAKING_SPACE = "\xc2\xa0";
@@ -27,20 +30,20 @@ class Money
 
     public const ROUND_HALF_NEGATIVE_INFINITY = 8;
 
-    private Currency $currency;
+    protected Currency $currency;
 
-    private string $amount;
+    protected string $amount;
 
     /** @var PhpMoney */
     private $money;
 
-    private function __construct()
+    final private function __construct()
     {
     }
 
     public static function fromFloat(float $amount, Currency $currency, int $roundingMode = self::ROUND_HALF_UP): Money
     {
-        $instance = new self();
+        $instance = new static();
         $precision = $currency->getPrecision();
         $instance->amount = sprintf(
             "%.0F",
@@ -60,7 +63,7 @@ class Money
 
     public static function fromInt(int $amount, Currency $currency): Money
     {
-        $instance = new self();
+        $instance = new static();
         $instance->amount = (string)$amount;
         $instance->currency = $currency;
         $instance->initialize();
@@ -159,7 +162,7 @@ class Money
      */
     private static function fromPhpMoney(PhpMoney $phpMoney, Money $money)
     {
-        $instance = new self();
+        $instance = new static();
         $instance->money = $phpMoney;
         $instance->amount = $phpMoney->getAmount();
         $instance->currency = clone $money->currency;

@@ -6,8 +6,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityRepository;
 use Fixtures\Doctrine\Entity\DoctrineTest\Basket;
+use Re2bit\Common\Collections\ComparableRegistryInterface;
 use Re2bit\Types\Currency;
 use Re2bit\Types\Money;
+use Re2bit\Types\MoneyEmbeddable;
 
 class DoctrineTest extends AbstractDoctrineTest
 {
@@ -38,6 +40,15 @@ class DoctrineTest extends AbstractDoctrineTest
         $basket = new Basket();
         $basket->setid(1);
         $basket->setMoney(
+            MoneyEmbeddable::fromFloat(
+                1.23,
+                new Currency(
+                    'EUR'
+                )
+            )
+        );
+
+        $basket->setMoneyEur(
             Money::fromFloat(
                 1.23,
                 new Currency(
@@ -45,11 +56,12 @@ class DoctrineTest extends AbstractDoctrineTest
                 )
             )
         );
+
         $this->entityManager->persist($basket);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        /** @var EntityRepository $repo */
+        /** @var EntityRepository<Basket> $repo */
         $repo = $this->entityManager->getRepository(Basket::class);
         static::assertCount(
             1,
@@ -84,6 +96,23 @@ class DoctrineTest extends AbstractDoctrineTest
                 )
             )
         );
+
+        static::assertCount(
+            1,
+            $repo->matching(
+                Criteria::create()->where(
+                    Criteria::expr()->eq(
+                        'moneyEur',
+                        Money::fromFloat(
+                            1.23,
+                            new Currency(
+                                'EUR'
+                            )
+                        )
+                    )
+                )
+            )
+        );
     }
 
     /**
@@ -94,6 +123,11 @@ class DoctrineTest extends AbstractDoctrineTest
      */
     public function testMatchingInMemory(): void
     {
+        if (!interface_exists(ComparableRegistryInterface::class)) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $basket = new Basket();
         $basket->setid(1);
         $basket->setMoney(
@@ -107,9 +141,13 @@ class DoctrineTest extends AbstractDoctrineTest
 
         $collection = new ArrayCollection([$basket]);
 
-        // Cannot Compare Objects. Doctrine is limited to Scalar Values. Changes maybe with 3.0 ?
+        /**
+         * Cannot Compare Objects. Doctrine is limited to Scalar Values. Changes maybe with 3.0 ?
+         * https://github.com/doctrine/collections/issues/260
+         * use ```composer require re2bit/collections``` to replace with a collection that support Comparable
+         */
         static::assertCount(
-            0,
+            1,
             $collection->matching(
                 Criteria::create()->where(
                     Criteria::expr()->eq(

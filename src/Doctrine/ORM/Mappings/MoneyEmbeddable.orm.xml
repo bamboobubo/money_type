@@ -2,7 +2,7 @@
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
                           https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <embeddable name="Re2bit\Types\Money">
+    <embeddable name="Re2bit\Types\MoneyEmbeddable">
         <field name="currency" type="money_currency"/>
         <field name="amount" type="money_amount"/>
     </embeddable>
