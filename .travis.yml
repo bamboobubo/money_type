@@ -2,6 +2,6 @@ language: php
 php:
 - 7.4
 before_script:
-- composer self-update
+- composer self-update --1
 - composer install --dev --no-interaction
 script: composer test
