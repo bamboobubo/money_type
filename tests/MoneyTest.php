@@ -50,7 +50,7 @@ class MoneyTest extends TestCase
         $this->expectException(PrecisionException::class);
         $moneyEur1051 = Money::fromInt(105049, new Currency('EUR', 4));
         $moneyEur1030 = Money::fromInt(1030, new Currency('EUR'));
-        $moneyEur1030->subtract($moneyEur1051);
+        $result = $moneyEur1030->subtract($moneyEur1051);
     }
 
     public function testMultiply(): void
@@ -94,7 +94,7 @@ class MoneyTest extends TestCase
         $this->expectException(PrecisionException::class);
         $moneyEur1051 = Money::fromInt(105049, new Currency('EUR', 4));
         $moneyEur1030 = Money::fromInt(1030, new Currency('EUR'));
-        Money::min($moneyEur1030, $moneyEur1051);
+        $result = Money::min($moneyEur1030, $moneyEur1051);
     }
 
     public function testMaxPrecisionException(): void
@@ -102,7 +102,7 @@ class MoneyTest extends TestCase
         $this->expectException(PrecisionException::class);
         $moneyEur1051 = Money::fromInt(105049, new Currency('EUR', 4));
         $moneyEur1030 = Money::fromInt(1030, new Currency('EUR'));
-        Money::max($moneyEur1030, $moneyEur1051);
+        $result = Money::max($moneyEur1030, $moneyEur1051);
     }
 
     public function testSumPrecisionException(): void
@@ -110,7 +110,7 @@ class MoneyTest extends TestCase
         $this->expectException(PrecisionException::class);
         $moneyEur1051 = Money::fromInt(105049, new Currency('EUR', 4));
         $moneyEur1030 = Money::fromInt(1030, new Currency('EUR'));
-        Money::sum($moneyEur1030, $moneyEur1051);
+        $result = Money::sum($moneyEur1030, $moneyEur1051);
     }
 
     public function testAvgPrecisionException(): void
@@ -118,6 +118,6 @@ class MoneyTest extends TestCase
         $this->expectException(PrecisionException::class);
         $moneyEur1051 = Money::fromInt(105049, new Currency('EUR', 4));
         $moneyEur1030 = Money::fromInt(1030, new Currency('EUR'));
-        Money::avg($moneyEur1030, $moneyEur1051);
+        $result = Money::avg($moneyEur1030, $moneyEur1051);
     }
 }
