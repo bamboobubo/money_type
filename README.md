@@ -1,6 +1,7 @@
 # bamboobubo/money_type
 
 [![Build Status](https://travis-ci.org/bamboobubo/money_type.svg?branch=master)](https://travis-ci.org/bamboobubo/money_type)
+[![Build Status](https://github.com/bamboobubo/money_type/workflows/test/badge.svg)](https://github.com/bamboobubo/money_type)
 
 ## !!! Work in Progress !!!
 
