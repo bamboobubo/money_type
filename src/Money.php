@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * This file is part of the re2bit/money_type library
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * @copyright Copyright (c) René Gerritsen <https://re2bit.de>
+ * @license http://opensource.org/licenses/MIT MIT
+ */
+
 namespace Re2bit\Types;
 
 use DomainException;
@@ -37,37 +47,34 @@ class Money
     /** @var PhpMoney */
     private $money;
 
-    final private function __construct()
+    final public function __construct(string $amount, Currency $currency)
     {
+        $this->amount = $amount;
+        $this->currency = $currency;
+        $this->initialize();
     }
 
     public static function fromFloat(float $amount, Currency $currency, int $roundingMode = self::ROUND_HALF_UP): Money
     {
-        $instance = new static();
-        $precision = $currency->getPrecision();
-        $instance->amount = sprintf(
-            "%.0F",
-            round(
+        return new static(
+            sprintf(
+                "%.0F",
                 round(
-                    $amount,
-                    $precision,
-                    $roundingMode
-                ) * (10 ** $precision),
-                0
-            )
+                    round(
+                        $amount,
+                        $currency->getPrecision(),
+                        $roundingMode
+                    ) * (10 ** $currency->getPrecision()),
+                    0
+                )
+            ),
+            $currency
         );
-        $instance->currency = $currency;
-        $instance->initialize();
-        return $instance;
     }
 
     public static function fromInt(int $amount, Currency $currency): Money
     {
-        $instance = new static();
-        $instance->amount = (string)$amount;
-        $instance->currency = $currency;
-        $instance->initialize();
-        return $instance;
+        return new static((string)$amount, $currency);
     }
 
     public static function fromFormattedString(
@@ -162,11 +169,10 @@ class Money
      */
     private static function fromPhpMoney(PhpMoney $phpMoney, Money $money)
     {
-        $instance = new static();
-        $instance->money = $phpMoney;
-        $instance->amount = $phpMoney->getAmount();
-        $instance->currency = clone $money->currency;
-        return $instance;
+        return new static(
+            $phpMoney->getAmount(),
+            clone $money->currency
+        );
     }
 
     private function initialize(): void

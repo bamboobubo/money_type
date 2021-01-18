@@ -4,9 +4,7 @@ TODO
 * Test decorated Methods
 * Exception for Precision greater than 14 with init from Float
 * JmsSerializer - different Types and I18N through Context
-* \Re2bit\Types\Money::__construct public
 * Generator Command to Create Types
-* Add Licence Information
 * Add Symfony Serializer Context Provider Loader for XML, YML
 * Implement `merge` for Serializer Context Provider Metadata Loader
 * Add Api-Platform Schema Normalizer Money Type Info

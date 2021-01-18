@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * This file is part of the re2bit/money_type library
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * @copyright Copyright (c) René Gerritsen <https://re2bit.de>
+ * @license http://opensource.org/licenses/MIT MIT
+ */
+
 namespace Re2bit\Types\Tests;
 
 use Doctrine\ORM\EntityManager;
@@ -19,16 +29,16 @@ class SimpleBaseManagerRegistry extends AbstractManagerRegistry
     /**
      * SimpleBaseManagerRegistry constructor.
      *
-     * @param callable        $serviceCreator
-     * @param string          $name
-     * @param array|string[]  $connections
-     * @param array|string[]  $managers
-     * @param string          $defaultConnection
-     * @param string          $defaultManager
-     * @param string          $proxyInterface
+     * @param callable       $serviceCreator
+     * @param string         $name
+     * @param array|string[] $connections
+     * @param array|string[] $managers
+     * @param string|null    $defaultConnection
+     * @param string|null    $defaultManager
+     * @param string         $proxyInterface
      */
     public function __construct(
-        $serviceCreator,
+        callable $serviceCreator,
         $name = 'anonymous',
         array $connections = ['default' => 'default_connection'],
         array $managers = ['default' => 'default_manager'],
