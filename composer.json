@@ -4,7 +4,9 @@
   "authors": [
     {
       "name": "René Gerritsen",
-      "email": "rene.gerritsen@me.com"
+      "email": "rene.gerritsen@me.com",
+      "homepage": "https://re2bit.de",
+      "role": "developer"
     }
   ],
   "license": "MIT",
@@ -17,6 +19,27 @@
     "ext-intl": "*",
     "symfony/intl": "^5.1",
     "doctrine/orm": "^2.7"
+  },
+  "archive": {
+    "exclude": [
+      "/tests",
+      "/docs",
+      "/.composer",
+      "/.github",
+      "/.run",
+      "/phpstan.neon",
+      "phpda.yml",
+      "phpdoc.dist.xml",
+      "Dockerfile",
+      "docker-entrypoint.sh",
+      ".gitlab-ci.yml",
+      "TODO",
+      "rules.xml",
+      "phpunit.xml.dist",
+      "captainhook.json",
+      ".travis.yml",
+      ".php_cs.dist"
+    ]
   },
   "extra": {
     "merge-plugin": {
@@ -48,7 +71,8 @@
     "symfony/serializer": "^5.0",
     "symfony/property-info": "^5.1",
     "phpmd/phpmd": "^2.9",
-    "wikimedia/composer-merge-plugin": "^1.4"
+    "wikimedia/composer-merge-plugin": "^1.4",
+    "api-platform/core": "^2.5"
   },
   "autoload": {
     "psr-4": {
