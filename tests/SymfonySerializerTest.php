@@ -44,7 +44,6 @@ class SymfonySerializerTest extends TestCase
             ],
         ];
 
-        /** @var Money $moneyFromArray */
         $moneyFromArray = $normalizer->denormalize(
             $data,
             Money::class
